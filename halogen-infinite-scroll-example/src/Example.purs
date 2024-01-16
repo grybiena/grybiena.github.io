@@ -64,6 +64,10 @@ renderExample _ =
       , HH.p_ [ HH.text "The components in this example load pictures from "
               , HH.a [ HP.href "https://picsum.photos/" ] [HH.text "this random image API."]
               ]
+      , HH.p_ [ HH.text "This library generally works very smoothly on mobile browsers. Scrolling can be jerky on PC."
+              , HH.text "If you are browsing on PC and experiencing jerk while scrolling try opening a mobile device emulator in developer tools."
+              ]
+
       ]
     ]
 
