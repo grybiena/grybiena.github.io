@@ -5,21 +5,24 @@ import CSS.Size (px)
 import Color (black)
 import Control.Alt (void)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
+import DOM.HTML.Indexed.InputType (InputType(..))
 import Data.EuclideanRing (mod)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
+import Halogen (PropName(..))
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
+import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.Infinite.Scroll (class Feed, class FeedOrder)
 import Halogen.Infinite.Scroll as HIS
 import Halogen.VDom.Driver (runUI)
 import Pipes (yield)
-import Prelude (class Eq, class Ord, class Show, Unit, bind, compare, const, discard, eq, identity, pure, show, unit, ($), (+), (-), (<>))
+import Prelude (class Eq, class Ord, class Show, Unit, bind, compare, const, discard, eq, identity, not, pure, show, unit, ($), (+), (-), (<>))
 import Type.Proxy (Proxy(..))
 
 
@@ -29,7 +32,7 @@ main = do
     body <- HA.awaitBody
     void $ runUI exampleComponent unit body
 
-type DemoSlots = ( example :: forall q . H.Slot q HIS.ScrollFeed Unit ) 
+type DemoSlots = ( example :: forall q . H.Slot q HIS.ScrollFeed Boolean ) 
 
 _example = Proxy :: Proxy "example"
 
@@ -37,19 +40,27 @@ _example = Proxy :: Proxy "example"
 exampleComponent :: forall q o . H.Component q Unit o Aff
 exampleComponent =
   H.mkComponent
-    { initialState: const unit 
+    { initialState: const false 
     , render: renderExample
-    , eval: H.mkEval H.defaultEval 
+    , eval: H.mkEval $ H.defaultEval { handleAction = \Toggle -> H.modify_ not }
     }
 
 scrollHeight :: Number
 scrollHeight = 1200.0
 
-renderExample :: forall a. Unit -> H.ComponentHTML a DemoSlots Aff 
-renderExample _ =
+data Action = Toggle 
+
+renderExample :: Boolean -> H.ComponentHTML Action DemoSlots Aff 
+renderExample t =
   HH.div_
     [ HH.h3_ [ HH.a [ HP.href "https://github.com/grybiena/halogen-infinite-scroll" ] [ HH.text "halogen-infinite-scroll" ]
              ]
+    , HH.div_
+        [ HH.input [ HP.prop (PropName "type") InputCheckbox
+                   , HE.onChange (const Toggle)
+                   ]
+        , HH.text "enable top loading/unloading"
+        ]
     , HH.div [ style do
                  top (px 10.0)
                  left (px 10.0)
@@ -57,18 +68,8 @@ renderExample _ =
                  height (px scrollHeight)
                  borderColor black
              ]
-             [ HH.slot_ _example unit HIS.component (HIS.defaultFeedParams (PicIndex 150))
+             [ HH.slot_ _example t HIS.component ((HIS.defaultFeedParams (PicIndex 150)) { enableTop = t })
              ]
-    , HH.div_
-      [ HH.h3_ [ HH.text "About" ]
-      , HH.p_ [ HH.text "The components in this example load pictures from "
-              , HH.a [ HP.href "https://picsum.photos/" ] [HH.text "this random image API."]
-              ]
-      , HH.p_ [ HH.text "This library generally works very smoothly on mobile browsers. Scrolling can be jerky on PC."
-              , HH.text "If you are browsing on PC and experiencing jerk while scrolling try opening a mobile device emulator in developer tools."
-              ]
-
-      ]
     ]
 
 newtype PicIndex = PicIndex Int

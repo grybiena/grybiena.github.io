@@ -158,11 +158,11 @@
         "env": "env"
       },
       "locked": {
-        "lastModified": 1705415277,
-        "narHash": "sha256-Hkl9B8gXMirfJYFCa77wjCOhXi3LsTVx+l62fAiHg4U=",
+        "lastModified": 1705532979,
+        "narHash": "sha256-ZkQiqCtV1vbHdFOhAw8aVp+xNGO7tNt8dNVWuS+TLrM=",
         "ref": "main",
-        "rev": "d9b4bf024a6a324dfd77fc68ffa9e8637d3308bd",
-        "revCount": 4,
+        "rev": "8c14423c6e05dea645a2e6fcdc8a7b8f692690ab",
+        "revCount": 6,
         "type": "git",
         "url": "ssh://git@github.com/grybiena/halogen-infinite-scroll"
       },
