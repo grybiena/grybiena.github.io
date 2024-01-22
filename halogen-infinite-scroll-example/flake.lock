@@ -158,18 +158,18 @@
         "env": "env"
       },
       "locked": {
-        "lastModified": 1705532979,
-        "narHash": "sha256-ZkQiqCtV1vbHdFOhAw8aVp+xNGO7tNt8dNVWuS+TLrM=",
-        "ref": "main",
-        "rev": "8c14423c6e05dea645a2e6fcdc8a7b8f692690ab",
-        "revCount": 6,
+        "lastModified": 1705673220,
+        "narHash": "sha256-JE+kN3RIucFOnnRWTpP0MCYKjDeIxw68Le6WJw4b7oA=",
+        "ref": "request-animation-frame",
+        "rev": "346fe10fcdd086664b5ae4df0357be23e429dccc",
+        "revCount": 28,
         "type": "git",
-        "url": "ssh://git@github.com/grybiena/halogen-infinite-scroll"
+        "url": "file:../../halogen-infinite-scroll"
       },
       "original": {
-        "ref": "main",
+        "ref": "request-animation-frame",
         "type": "git",
-        "url": "ssh://git@github.com/grybiena/halogen-infinite-scroll"
+        "url": "file:../../halogen-infinite-scroll"
       }
     },
     "lint-utils": {

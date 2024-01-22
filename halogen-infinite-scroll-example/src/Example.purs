@@ -18,8 +18,9 @@ import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Infinite.Scroll (class Feed, class FeedOrder)
+import Halogen.Infinite.Scroll (class Feed, defaultFeedOptions)
 import Halogen.Infinite.Scroll as HIS
+import Halogen.Infinite.Scroll.Page (class PageElement, class PageOrder)
 import Halogen.VDom.Driver (runUI)
 import Pipes (yield)
 import Prelude (class Eq, class Ord, class Show, Unit, bind, compare, const, discard, eq, identity, not, pure, show, unit, ($), (+), (-), (<>))
@@ -32,7 +33,7 @@ main = do
     body <- HA.awaitBody
     void $ runUI exampleComponent unit body
 
-type DemoSlots = ( example :: forall q . H.Slot q HIS.ScrollFeed Boolean ) 
+type DemoSlots = ( example :: forall o. H.Slot (HIS.Query PicIndex) o Boolean ) 
 
 _example = Proxy :: Proxy "example"
 
@@ -68,7 +69,7 @@ renderExample t =
                  height (px scrollHeight)
                  borderColor black
              ]
-             [ HH.slot_ _example t HIS.component ((HIS.defaultFeedParams (PicIndex 150)) { enableTop = t })
+             [ HH.slot_ _example t HIS.component ((defaultFeedOptions (PicIndex 150)) { enableTop = t })
              ]
     ]
 
@@ -83,8 +84,8 @@ instance Eq PicIndex where
 instance Ord PicIndex where
   compare (PicIndex a) (PicIndex b) = compare a b
 
-instance FeedOrder PicIndex where
-  feedOrder (PicIndex a) (PicIndex b) = compare a b
+instance PageOrder PicIndex where
+  pageOrder (PicIndex a) (PicIndex b) = compare a b
 
 instance MonadAff m => Feed PicIndex m where
   feedAbove (PicIndex i) = do
@@ -103,6 +104,7 @@ instance MonadAff m => Feed PicIndex m where
   feedDelete = pure Nothing
   onElement _ = pure unit
 
+instance MonadAff m => PageElement PicIndex m where
   element =
       H.mkComponent
         { initialState: identity 
@@ -119,4 +121,5 @@ instance MonadAff m => Feed PicIndex m where
                                                              height (px 400.0)
                                                           ]
                                                  ]
+
 

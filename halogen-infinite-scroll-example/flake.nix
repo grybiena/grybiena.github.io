@@ -2,7 +2,9 @@ rec {
   description = "halogen-infinite-scroll-example";
 
   inputs = {
-    halogen-infinite-scroll.url = "git+ssh://git@github.com/grybiena/halogen-infinite-scroll?ref=main";
+# halogen-infinite-scroll.url = "git+ssh://git@github.com/grybiena/halogen-infinite-scroll?ref=main";
+    halogen-infinite-scroll.url = "git+file:../../halogen-infinite-scroll?ref=request-animation-frame";
+
     env.follows = "halogen-infinite-scroll/env";
   };
   outputs = inputs@{ env, ... }:
