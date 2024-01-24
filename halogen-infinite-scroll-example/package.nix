@@ -7,6 +7,7 @@
         halogen-css
         halogen-subscriptions
         halogen-infinite-scroll
+        js-timers
         mmorph
         pipes
         resourcet

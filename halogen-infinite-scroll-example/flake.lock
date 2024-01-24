@@ -305,11 +305,11 @@
         "env": "env"
       },
       "locked": {
-        "lastModified": 1705586777,
-        "narHash": "sha256-P+4851d70E248HqTDg7tSpjndjE1xiWgwuzdrLct58I=",
+        "lastModified": 1706108710,
+        "narHash": "sha256-OoMjOGUFDyE5Y73RRv2z9/S1PLebYJguqaHSB9GCacc=",
         "ref": "interface-changes",
-        "rev": "5f83fa761d9554e49762cb29941cda74e95140af",
-        "revCount": 12,
+        "rev": "0214d07b313c0af39567d5f7c7c48a276ae09274",
+        "revCount": 13,
         "type": "git",
         "url": "file:../../halogen-infinite-scroll"
       },
