@@ -305,16 +305,16 @@
         "env": "env"
       },
       "locked": {
-        "lastModified": 1705673220,
-        "narHash": "sha256-JE+kN3RIucFOnnRWTpP0MCYKjDeIxw68Le6WJw4b7oA=",
-        "ref": "request-animation-frame",
-        "rev": "346fe10fcdd086664b5ae4df0357be23e429dccc",
-        "revCount": 28,
+        "lastModified": 1705586777,
+        "narHash": "sha256-P+4851d70E248HqTDg7tSpjndjE1xiWgwuzdrLct58I=",
+        "ref": "interface-changes",
+        "rev": "5f83fa761d9554e49762cb29941cda74e95140af",
+        "revCount": 12,
         "type": "git",
         "url": "file:../../halogen-infinite-scroll"
       },
       "original": {
-        "ref": "request-animation-frame",
+        "ref": "interface-changes",
         "type": "git",
         "url": "file:../../halogen-infinite-scroll"
       }

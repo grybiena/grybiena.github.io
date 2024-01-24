@@ -3,7 +3,7 @@ rec {
 
   inputs = {
 
-    halogen-infinite-scroll.url = "git+file:../../halogen-infinite-scroll?ref=request-animation-frame";
+    halogen-infinite-scroll.url = "git+file:../../halogen-infinite-scroll?ref=interface-changes";
     halogen-xterm.url = "github:grybiena/halogen-xterm";
     xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-infinite-scroll/env";
