@@ -1,16 +1,14 @@
 module Example where
 
-import CSS (border, borderColor, height, left, solid, top, width)
+import CSS (borderColor, display, flex, flexDirection, height, left, row, top, width)
 import CSS.Size (px)
 import Color (black)
 import Control.Alt (void)
-import Control.Monad.Rec.Class (Step(..), tailRecM)
+import Control.Category (identity, (<<<))
 import DOM.HTML.Indexed.InputType (InputType(..))
-import Data.EuclideanRing (mod)
-import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff (Aff)
-import Effect.Aff.Class (class MonadAff)
+import Example.Picture (PicIndex(..))
 import Halogen (PropName(..))
 import Halogen as H
 import Halogen.Aff as HA
@@ -18,12 +16,13 @@ import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Infinite.Scroll (class Feed, defaultFeedOptions)
+import Halogen.Infinite.Scroll (defaultFeedOptions)
 import Halogen.Infinite.Scroll as HIS
-import Halogen.Infinite.Scroll.Page (class PageElement, class PageOrder)
+import Halogen.Shell as Shell
+import Halogen.Shell.Free (terminal)
+import Halogen.Terminal.Free (loadAddons, writeLn)
 import Halogen.VDom.Driver (runUI)
-import Pipes (yield)
-import Prelude (class Eq, class Ord, class Show, Unit, bind, compare, const, discard, eq, identity, not, pure, show, unit, ($), (+), (-), (<>))
+import Prelude (Unit, bind, const, discard, not, unit, ($))
 import Type.Proxy (Proxy(..))
 
 
@@ -31,32 +30,47 @@ main :: Effect Unit
 main = do
   HA.runHalogenAff do
     body <- HA.awaitBody
-    void $ runUI exampleComponent unit body
+    void $ runUI feedComponent unit body
 
-type DemoSlots = ( example :: forall o. H.Slot (HIS.Query PicIndex) o Boolean ) 
+type Slots = ( feed :: forall o. H.Slot (HIS.Query PicIndex) o Boolean
+             , shell :: forall o. H.Slot (Shell.Query String Unit) o Unit
+             ) 
 
-_example = Proxy :: Proxy "example"
+_feed = Proxy :: Proxy "feed"
+_shell = Proxy :: Proxy "shell"
 
 
-exampleComponent :: forall q o . H.Component q Unit o Aff
-exampleComponent =
+feedComponent :: forall q o . H.Component q Unit o Aff
+feedComponent =
   H.mkComponent
     { initialState: const false 
     , render: renderExample
-    , eval: H.mkEval $ H.defaultEval { handleAction = \Toggle -> H.modify_ not }
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
 
-scrollHeight :: Number
-scrollHeight = 1200.0
 
 data Action = Toggle 
 
-renderExample :: Boolean -> H.ComponentHTML Action DemoSlots Aff 
+handleAction :: forall o m. Action -> H.HalogenM Boolean Action Slots o m Unit 
+handleAction =
+  case _ of
+      Toggle -> do
+        let q :: String -> Shell.Query String Unit Unit
+            q s = Shell.Query s identity
+        H.modify_ not
+        s <- H.get
+        void $ H.query _shell unit (q if s then "top loading/unloading enabled" else "top loading/unloading disabled") 
+
+
+
+renderExample :: Boolean -> H.ComponentHTML Action Slots Aff 
 renderExample t =
-  HH.div_
-    [ HH.h3_ [ HH.a [ HP.href "https://github.com/grybiena/halogen-infinite-scroll" ] [ HH.text "halogen-infinite-scroll" ]
-             ]
-    , HH.div_
+  HH.div
+    [ style do
+        display flex
+        flexDirection row
+    ]
+    [ HH.div_
         [ HH.input [ HP.prop (PropName "type") InputCheckbox
                    , HE.onChange (const Toggle)
                    ]
@@ -66,60 +80,20 @@ renderExample t =
                  top (px 10.0)
                  left (px 10.0)
                  width (px 400.0)
-                 height (px scrollHeight)
+                 height (px 1200.0)
                  borderColor black
              ]
-             [ HH.slot_ _example t HIS.component ((defaultFeedOptions (PicIndex 150)) { enableTop = t })
+             [ HH.slot_ _feed t HIS.component ((defaultFeedOptions (PicIndex 150)) { enableTop = t })
              ]
+    , HH.slot_ _shell unit Shell.component shell
     ]
-
-newtype PicIndex = PicIndex Int
-
-instance Show PicIndex where 
-  show (PicIndex a) = show a
-
-instance Eq PicIndex where
-  eq (PicIndex a) (PicIndex b) = eq a b
-
-instance Ord PicIndex where
-  compare (PicIndex a) (PicIndex b) = compare a b
-
-instance PageOrder PicIndex where
-  pageOrder (PicIndex a) (PicIndex b) = compare a b
-
-instance MonadAff m => Feed PicIndex m where
-  feedAbove (PicIndex i) = do
-    pure (tailRecM go i)
-    where go x = do
-            let z = (x-1) `mod` 300
-            yield (PicIndex z)
-            pure $ Loop z
-  feedBelow (PicIndex i) = do
-    pure (tailRecM go i)
-    where go x = do
-            let z = (x+1) `mod` 300
-            yield (PicIndex z)
-            pure $ Loop z
-  feedInsert = pure Nothing
-  feedDelete = pure Nothing
-  onElement _ = pure unit
-
-instance MonadAff m => PageElement PicIndex m where
-  element =
-      H.mkComponent
-        { initialState: identity 
-        , render: renderPic
-        , eval: H.mkEval H.defaultEval
-        }
-      where
-        renderPic (PicIndex i) = HH.div [ style do
-                                                   border solid (px 1.0) black
-                                               ] [ HH.text (show i)
-                                                 , HH.img [HP.src ("https://picsum.photos/" <> show i)
-                                                          ,style do
-                                                             width (px 400.0)
-                                                             height (px 400.0)
-                                                          ]
-                                                 ]
-
-
+  where
+    shell =
+      { init: do
+          terminal do
+            loadAddons false 
+      , query: terminal <<< writeLn
+      , shell: unit 
+      }
+    
+    

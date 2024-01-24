@@ -10,6 +10,7 @@
         mmorph
         pipes
         resourcet
+        halogen-xterm 
       ];
     src = "src";
   }

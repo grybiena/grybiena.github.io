@@ -2,10 +2,12 @@ rec {
   description = "halogen-infinite-scroll-example";
 
   inputs = {
-# halogen-infinite-scroll.url = "git+ssh://git@github.com/grybiena/halogen-infinite-scroll?ref=main";
-    halogen-infinite-scroll.url = "git+file:../../halogen-infinite-scroll?ref=request-animation-frame";
 
+    halogen-infinite-scroll.url = "git+file:../../halogen-infinite-scroll?ref=request-animation-frame";
+    halogen-xterm.url = "github:grybiena/halogen-xterm";
+    xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-infinite-scroll/env";
+
   };
   outputs = inputs@{ env, ... }:
     env.flake-utils.lib.eachDefaultSystem (system:
@@ -21,7 +23,7 @@ rec {
         purs-nix = env.purs-nix {
           inherit system; 
           overlays = with inputs; env.gen-overlays { inherit pkgs system; } {
-            inherit halogen-infinite-scroll;
+            inherit halogen-infinite-scroll halogen-xterm xterm;
           };
         };
 
