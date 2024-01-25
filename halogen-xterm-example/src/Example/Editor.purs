@@ -6,19 +6,22 @@ import Ace (EditSession, Editor, ace, editNode)
 import Ace.EditSession (getValue, setValue)
 import Ace.Editor (getSession)
 import CSS (display, flex, flexDirection, height, px, row, width)
+import Control.Monad.Rec.Class (class MonadRec)
 import Data.Array (head)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Traversable (traverse_)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Aff.Class (class MonadAff)
 import Example.FileSystem (FilePath(..), FileSystem, openFileSystem, readFile, writeFile)
+import Example.Shell (cancel)
+import Example.Shell as Shell
 import Halogen (RefLabel(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Shell.Free (Args)
+import Halogen.Shell.Free (Args, Stdout(..))
 import Web.Event.Event (Event, stopPropagation)
 import Web.HTML.HTMLElement (fromElement)
 import Web.UIEvent.MouseEvent (toEvent)
@@ -31,10 +34,11 @@ type State =
 data Action =
     Initialize
   | Save Event
+  | Exit Event
 
 
 
-component :: forall q o m. MonadAff m => H.Component q Args o m
+component :: forall q o m. MonadAff m => MonadRec m => H.Component q Args (Stdout (Shell.State o m) o m) m
 component = do
   H.mkComponent
     { initialState: \fp -> { editSession: Nothing, filePath: FilePath (maybe "uhoh" identity (head fp)) } 
@@ -54,6 +58,7 @@ renderComponent _ =
                        height (px 500.0)
                    ] []
           , HH.button [ HE.onClick (Save <<< toEvent)] [HH.text "Save" ] 
+          , HH.button [ HE.onClick (Exit <<< toEvent)] [HH.text "Exit" ] 
           ]
   
    in
@@ -68,8 +73,9 @@ renderComponent _ =
 
 handleAction :: forall o m .
                 MonadAff m
+             => MonadRec m
              => Action
-             -> H.HalogenM State Action () o m Unit
+             -> H.HalogenM State Action () (Stdout (Shell.State o m) o m) m Unit
 handleAction = case _ of
   Initialize -> do
     fs <- H.liftEffect openFileSystem
@@ -90,4 +96,9 @@ handleAction = case _ of
      flip traverse_ s $ \(db /\ _ /\ sess) -> do
         f <- H.liftEffect $ getValue sess
         H.liftAff $ writeFile db p f
+  Exit e -> do
+     H.liftEffect $ stopPropagation e
+     H.raise $ Stdout cancel
+
+
 
