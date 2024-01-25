@@ -2,6 +2,7 @@ module Example where
 
 import Prelude
 
+import Control.Monad.Cont (lift)
 import Control.Monad.Rec.Class (class MonadRec)
 import Data.Array (filter, head, tail)
 import Data.Lens (lens', (.~), (^.))
@@ -13,8 +14,11 @@ import Data.Traversable (traverse_)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff.AVar as AVar
-import Effect.Aff.Class (class MonadAff)
+import Effect.Aff.Class (class MonadAff, liftAff)
+import Effect.Class (liftEffect)
 import Example.Button as Button
+import Example.Editor as Editor
+import Example.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
 import Halogen.Aff as HA
 import Halogen.Shell as Shell
 import Halogen.Shell.CommandLine (class CommandLine, cmd, commandLine, prompt, textInterpreter)
@@ -149,6 +153,37 @@ commands =
            write "\r\n"
         interpreter canceler
     } 
+  , { name: "edit"
+    , description: [ "opens a file in the editor as a subprocess."
+                   , "the subprocess can be cancelled with ^C"
+                   , "accepts the file path as argument."
+                   ]
+    , cmd: \args -> do 
+        case args of
+          [_] -> do
+            modifyShell (cmd .~ "")
+            h <- exec Editor.component args
+            modifyShell (\(State s) -> State s { foreground = Just h })
+            terminal do
+               options $ setCursorBlink false
+               write "\r\n"
+            interpreter canceler
+          _ -> basic (terminal $ writeLn "this command expects a single file name as its argument\r\n") args
+    } 
+  , { name: "ls"
+    , description: [ "lists files in the file system" ]
+    , cmd: basic $ do
+       fs <- liftEffect $ openFileSystem
+       files <- liftAff $ listFiles fs
+       terminal $ writeLn ("\r\n" <> (joinWith " " ((\(FilePath fp) -> fp) <$> files)))
+    }
+  , { name: "rm"
+    , description: [ "remove files from the file system" ]
+    , cmd: \args -> do
+       fs <- liftEffect $ openFileSystem
+       traverse_ (\f -> liftAff $ deleteFile fs (FilePath f)) args
+       done
+    }
   ]
   where
     basic c = const (c *> done)

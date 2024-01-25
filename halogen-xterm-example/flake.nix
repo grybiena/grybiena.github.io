@@ -4,6 +4,7 @@ rec {
   inputs = {
 
     halogen-xterm.url = "github:grybiena/halogen-xterm";
+    leveldb.url = "github:grybiena/leveldb";
     xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-xterm/env";
   };
@@ -21,7 +22,7 @@ rec {
         purs-nix = env.purs-nix {
           inherit system; 
           overlays = with inputs; env.gen-overlays { inherit pkgs system; } {
-            inherit halogen-xterm xterm;
+            inherit halogen-xterm xterm leveldb;
           };
         };
 
@@ -35,6 +36,7 @@ rec {
         bundle = {
           esbuild = {
             outfile = "main.js";
+            platform = "browser";
             minify = "true";
             };
           module = "Example";
@@ -65,7 +67,7 @@ rec {
              pkgs.mkShell
                { packages = with pkgs; [
                    nodejs
-                   (ps.command {}) 
+                   (ps.command { inherit bundle;}) 
                    ps-tools.for-0_15.purescript-language-server
                    purs-nix.esbuild
                    purs-nix.purescript
