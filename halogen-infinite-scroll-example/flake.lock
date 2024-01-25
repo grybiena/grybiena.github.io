@@ -305,18 +305,18 @@
         "env": "env"
       },
       "locked": {
-        "lastModified": 1706108710,
-        "narHash": "sha256-OoMjOGUFDyE5Y73RRv2z9/S1PLebYJguqaHSB9GCacc=",
-        "ref": "interface-changes",
-        "rev": "0214d07b313c0af39567d5f7c7c48a276ae09274",
-        "revCount": 13,
-        "type": "git",
-        "url": "file:../../halogen-infinite-scroll"
+        "lastModified": 1706187655,
+        "narHash": "sha256-QzvIXd/qKwVwyBV2becxMSS6R4Um+A3Q54AUORSA7B4=",
+        "owner": "grybiena",
+        "repo": "halogen-infinite-scroll",
+        "rev": "59d52c3f4137bd88e4ba63d35f545796ed19c0b7",
+        "type": "github"
       },
       "original": {
+        "owner": "grybiena",
         "ref": "interface-changes",
-        "type": "git",
-        "url": "file:../../halogen-infinite-scroll"
+        "repo": "halogen-infinite-scroll",
+        "type": "github"
       }
     },
     "halogen-xterm": {
