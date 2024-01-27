@@ -105,10 +105,15 @@ commands =
         case args of
           [fp] | String.length fp > 0 -> do
             modifyShell (cmd .~ "")
-            openWindow _editor unit Editor.component (FilePath fp) (const $ (closeWindow _editor unit))
-            modifyShell (\(ShellState s) -> ShellState s { foreground = Just { stdin: const $ pure unit
-                                                                   , kill: closeWindow _editor unit
-                                                                   } })
+            let exit = do
+                  closeWindow _editor unit
+                  terminal $ write "> "
+                  interpreter (textInterpreter $ commandLine (prog commands)) 
+            openWindow _editor unit Editor.component (FilePath fp) (const exit) 
+            let proc = { stdin: const $ pure unit
+                       , kill: closeWindow _editor unit
+                       }
+            modifyShell (\(ShellState s) -> ShellState s { foreground = Just proc })
             terminal do
                options $ setCursorBlink false
                write "\r\n"
