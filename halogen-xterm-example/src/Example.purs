@@ -6,22 +6,27 @@ import Control.Monad.Rec.Class (class MonadRec)
 import Data.Lens ((.~), (^.))
 import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
+import Data.String as String
 import Data.Traversable (traverse_)
 import Effect (Effect)
+import Effect.Aff (Aff)
 import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
+import Example.Button (Query(..))
 import Example.Button as Button
 import Example.Editor as Editor
 import Example.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
-import Example.Shell (State(..), Command, canceler, prog)
+import Halogen as H
 import Halogen.Aff as HA
-import Halogen.Shell as Shell
-import Halogen.Shell.CommandLine (cmd, commandLine, prompt, textInterpreter)
-import Halogen.Shell.Free (exec, getShell, interpreter, modifyShell, terminal)
-import Halogen.Terminal.Free (loadAddons, options, rows, write, writeLn)
-import Halogen.Terminal.Free.Options (getCursorBlink, getFontFamily, setCursorBlink)
 import Halogen.VDom.Driver (runUI)
+import Halogen.XShell (closeWindow, openWindow, queryWindow)
+import Halogen.XShell as Shell
+import Halogen.XShell.CommandLine (Command, ShellState(..), canceler, prog, cmd, commandLine, prompt, textInterpreter)
+import Halogen.XShell.Free (getShell, interpreter, modifyShell, terminal)
+import Halogen.XTerm.Free (loadAddons, options, rows, write, writeLn)
+import Halogen.XTerm.Free.Options (getCursorBlink, getFontFamily, setCursorBlink)
+import Type.Proxy (Proxy(..))
 
 
 main :: Effect Unit
@@ -29,20 +34,25 @@ main = do
   HA.runHalogenAff do
      body <- HA.awaitBody
      stdout <- AVar.empty
-     let shell =
-           { init: do
-               terminal do
-                 loadAddons true
-                 write "> "
-               interpreter (textInterpreter $ commandLine (prog commands))
-           , query: terminal <<< write
-           , shell: State { prompt: "> ", command: "", foreground: Nothing, commandEnv: commands }
-           }
+     let shell :: ShellState Slots Unit Aff
+         shell = ShellState { prompt: "> ", command: "", foreground: Nothing, commandEnv: commands }
      io <- runUI Shell.component shell body
+     void $ io.query $ do
+       terminal do
+         loadAddons true
+         write "> "
+       interpreter (textInterpreter $ commandLine (prog commands)) 
      AVar.put io.query stdout
 
+type Slots =
+  ( button :: H.Slot Button.Query Unit Unit 
+  , editor :: H.Slot Maybe Unit Unit
+  )
 
-commands :: forall o m. MonadAff m => MonadRec m => Array (Command o m)
+_button = Proxy :: Proxy "button"
+_editor = Proxy :: Proxy "editor"
+
+commands :: forall o m. MonadAff m => MonadRec m => Array (Command Slots o m)
 commands =
   [ { name: "rows"
     , description: [ "prints the number of rows in the terminal" ]
@@ -76,8 +86,11 @@ commands =
                    ]
     , cmd: \args -> do 
         modifyShell (cmd .~ "")
-        h <- exec Button.component args
-        modifyShell (\(State s) -> State s { foreground = Just h })
+        openWindow _button unit Button.component (joinWith " " args) (const $ terminal $ writeLn "click!")
+        let proc =  { stdin: \txt -> void $ queryWindow _button unit (SetText txt unit) 
+                    , kill: closeWindow _button unit
+                    }
+        modifyShell (\(ShellState s) -> ShellState s { foreground = Just proc })
         terminal do
            options $ setCursorBlink false
            write "\r\n"
@@ -90,10 +103,12 @@ commands =
                    ]
     , cmd: \args -> do 
         case args of
-          [_] -> do
+          [fp] | String.length fp > 0 -> do
             modifyShell (cmd .~ "")
-            h <- exec Editor.component args
-            modifyShell (\(State s) -> State s { foreground = Just h })
+            openWindow _editor unit Editor.component (FilePath fp) (const $ (closeWindow _editor unit))
+            modifyShell (\(ShellState s) -> ShellState s { foreground = Just { stdin: const $ pure unit
+                                                                   , kill: closeWindow _editor unit
+                                                                   } })
             terminal do
                options $ setCursorBlink false
                write "\r\n"
@@ -121,5 +136,4 @@ commands =
        shell' <- getShell
        terminal $ write ("\r\n" <> shell' ^. prompt)
        modifyShell (cmd .~ "")
-
 

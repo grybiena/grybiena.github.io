@@ -12,40 +12,43 @@ import Data.String (Pattern(..), joinWith, null, split)
 import Data.Traversable (traverse_)
 import Data.Tuple.Nested ((/\))
 import Effect.Aff.Class (class MonadAff)
-import Halogen.Shell.CommandLine (class CommandLine, cmd, commandLine, prompt, textInterpreter)
-import Halogen.Shell.Free (ProcessHandle, ShellM, getShell, interpreter, kill, modifyShell, tell, terminal)
-import Halogen.Terminal as Terminal
-import Halogen.Terminal.Free (options, write, writeLn)
-import Halogen.Terminal.Free.Options (setCursorBlink)
+import Halogen.XShell.CommandLine (class CommandLine, cmd, commandLine, prompt, textInterpreter)
+import Halogen.XShell.Free (ShellM, getShell, interpreter, modifyShell, terminal)
+import Halogen.XTerm as Terminal
+import Halogen.XTerm.Free (options, write, writeLn)
+import Halogen.XTerm.Free.Options (setCursorBlink)
 
-
-
-newtype State o m =
+newtype State w o m =
   State {
     prompt :: String
   , command :: String
-  , commandEnv :: Array (Command o m)
-  , foreground :: Maybe ProcessHandle
+  , commandEnv :: Array (Command w o m)
+  , foreground :: Maybe (ProcessHandle w o m)
   }
 
-instance CommandLine (State o m) where
+type ProcessHandle w o m =
+  { stdin :: String -> ShellM w (State w o m) o m Unit
+  , kill :: ShellM w (State w o m) o m Unit
+  }
+
+instance CommandLine (State w o m) where
   cmd = lens' (\(State s) -> s.command /\ (\c -> State (s { command = c }))) 
   prompt = lens' (\(State s) -> s.prompt /\ (\c -> State (s { prompt = c }))) 
 
 
-canceler :: forall o m . MonadAff m => MonadRec m => Terminal.Output -> ShellM (State o m) o m Unit
-canceler = textInterpreter $ (case _ of 
+canceler :: forall w o m . MonadAff m => MonadRec m => Terminal.Output -> ShellM w (State w o m) o m Unit
+canceler = textInterpreter $ case _ of 
                                 -- Ctrl+C
                                 "\x0003" -> do
                                    terminal $ write "^C"
                                    cancel
-                                s -> commandLine attach s)
+                                s -> commandLine attach s
 
-cancel :: forall o m . MonadAff m => MonadRec m => ShellM (State o m) o m Unit
+cancel :: forall w o m . MonadAff m => MonadRec m => ShellM w (State w o m) o m Unit
 cancel = do 
   State sh <- getShell
-  flip traverse_ sh.foreground $ \h -> do
-     kill h
+  flip traverse_ sh.foreground $ \f -> do
+     f.kill
   modifyShell (\(State st) -> State (st { foreground = Nothing }))
   modifyShell (cmd .~ "")
   shell' <- getShell
@@ -55,21 +58,21 @@ cancel = do
   interpreter (textInterpreter $ commandLine (prog sh.commandEnv))
 
 
-attach :: forall o m . MonadAff m => ShellM (State o m) o m Unit
+attach :: forall w o m . MonadAff m => ShellM w (State w o m) o m Unit
 attach = do
   sh@(State { foreground }) <- getShell
-  flip traverse_ foreground $ \h -> do
-    tell h (sh ^. cmd)
+  flip traverse_ foreground $ \f -> do
+    f.stdin (sh ^. cmd)
   terminal $ write "\r\n"
   modifyShell (cmd .~ "")
 
-type Command o m =
+type Command w o m =
   { name :: String
   , description :: Array String
-  , cmd :: Array String -> ShellM (State o m) o m Unit
+  , cmd :: Array String -> ShellM w (State w o m) o m Unit
   }
 
-commandMap :: forall o m. MonadAff m => MonadRec m => Array (Command o m) -> Map String (Array String -> ShellM (State  o m) o m Unit)
+commandMap :: forall w o m. MonadAff m => MonadRec m => Array (Command w o m) -> Map String (Array String -> ShellM w (State w o m) o m Unit)
 commandMap cmds = Map.insert "help" helpCmd (Map.fromFoldable ((\cmd -> cmd.name /\ cmd.cmd) <$> cmds))
   where
     helpCmd _ = do
@@ -84,7 +87,7 @@ commandMap cmds = Map.insert "help" helpCmd (Map.fromFoldable ((\cmd -> cmd.name
         cmdHelp cmd = "\r\n  " <> cmd.name <> "\r\n    " <> (joinWith "\r\n    " cmd.description)
 
 
-prog :: forall o m . MonadAff m => MonadRec m => Array (Command o m) -> ShellM (State o m) o m Unit
+prog :: forall w o m . MonadAff m => MonadRec m => Array (Command w o m) -> ShellM w (State w o m) o m Unit
 prog commands = do
   let cmds = commandMap commands
   sh <- getShell
@@ -105,5 +108,6 @@ prog commands = do
           shell' <- getShell
           terminal $ write (shell' ^. prompt)
           modifyShell (cmd .~ "")
+
 
 

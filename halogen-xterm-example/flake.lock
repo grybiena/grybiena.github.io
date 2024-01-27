@@ -306,15 +306,16 @@
         "xterm": "xterm"
       },
       "locked": {
-        "lastModified": 1705939665,
-        "narHash": "sha256-VTdRBEDHidf8vNjlP9vahXmRJieqxLMldlYS0aEOdCM=",
+        "lastModified": 1706360738,
+        "narHash": "sha256-ewJ2E9ODn+AQac2QaL5Ie8GwdHVTQJ+QnYkCWB80iiw=",
         "owner": "grybiena",
         "repo": "halogen-xterm",
-        "rev": "8ca754e58d7647f3de796315012da233a1412793",
+        "rev": "b9d6e1114d4b2ebc54ddd8296f4ade023cdffb83",
         "type": "github"
       },
       "original": {
         "owner": "grybiena",
+        "ref": "windows",
         "repo": "halogen-xterm",
         "type": "github"
       }
@@ -324,11 +325,11 @@
         "env": "env_2"
       },
       "locked": {
-        "lastModified": 1706200786,
-        "narHash": "sha256-h/56yUus2vB6nFurEj+vASXym/YIpcJEXmRtUP5dlpo=",
+        "lastModified": 1706202161,
+        "narHash": "sha256-2splI+s+eru6Pq6IiESobAHzcQUbq3spmzim/Hxcb+k=",
         "owner": "grybiena",
         "repo": "leveldb",
-        "rev": "7c3bc886f207e5f99092f870a1cdf8f4c2ba8977",
+        "rev": "205783604f6f113e5f0126250697ae674fe514c1",
         "type": "github"
       },
       "original": {

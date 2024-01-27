@@ -7,21 +7,17 @@ import Ace.EditSession (getValue, setValue)
 import Ace.Editor (getSession)
 import CSS (display, flex, flexDirection, height, px, row, width)
 import Control.Monad.Rec.Class (class MonadRec)
-import Data.Array (head)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse_)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Aff.Class (class MonadAff)
-import Example.FileSystem (FilePath(..), FileSystem, openFileSystem, readFile, writeFile)
-import Example.Shell (cancel)
-import Example.Shell as Shell
+import Example.FileSystem (FilePath, FileSystem, openFileSystem, readFile, writeFile)
 import Halogen (RefLabel(..))
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Halogen.Shell.Free (Args, Stdout(..))
 import Web.Event.Event (Event, stopPropagation)
 import Web.HTML.HTMLElement (fromElement)
 import Web.UIEvent.MouseEvent (toEvent)
@@ -36,12 +32,10 @@ data Action =
   | Save Event
   | Exit Event
 
-
-
-component :: forall q o m. MonadAff m => MonadRec m => H.Component q Args (Stdout (Shell.State o m) o m) m
+component :: forall q m. MonadAff m => MonadRec m => H.Component q FilePath Unit m
 component = do
   H.mkComponent
-    { initialState: \fp -> { editSession: Nothing, filePath: FilePath (maybe "uhoh" identity (head fp)) } 
+    { initialState: \filePath -> { editSession: Nothing, filePath } 
     , render: renderComponent
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
                                      , initialize = Just Initialize
@@ -71,11 +65,11 @@ renderComponent _ =
        ]
 
 
-handleAction :: forall o m .
+handleAction :: forall m .
                 MonadAff m
              => MonadRec m
              => Action
-             -> H.HalogenM State Action () (Stdout (Shell.State o m) o m) m Unit
+             -> H.HalogenM State Action () Unit m Unit
 handleAction = case _ of
   Initialize -> do
     fs <- H.liftEffect openFileSystem
@@ -98,7 +92,7 @@ handleAction = case _ of
         H.liftAff $ writeFile db p f
   Exit e -> do
      H.liftEffect $ stopPropagation e
-     H.raise $ Stdout cancel
+     H.raise unit 
 
 
 

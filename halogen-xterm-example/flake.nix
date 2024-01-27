@@ -3,7 +3,7 @@ rec {
 
   inputs = {
 
-    halogen-xterm.url = "github:grybiena/halogen-xterm";
+    halogen-xterm.url = "github:grybiena/halogen-xterm?ref=windows";
     leveldb.url = "github:grybiena/leveldb";
     xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-xterm/env";
