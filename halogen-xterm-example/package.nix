@@ -5,6 +5,7 @@
       [ ace
         css
         halogen
+        halogen-canvas
         halogen-css
         halogen-subscriptions
         halogen-xterm

@@ -300,17 +300,39 @@
         "type": "github"
       }
     },
+    "halogen-canvas": {
+      "inputs": {
+        "env": [
+          "halogen-xterm",
+          "env"
+        ]
+      },
+      "locked": {
+        "lastModified": 1706546309,
+        "narHash": "sha256-0jtZFPSe7/oMa197cRmK/1zavxsjiLFoQhqM8T651FM=",
+        "ref": "animate",
+        "rev": "b8ac2ae2ebf35d1e34d723c654193273b28a5e10",
+        "revCount": 6,
+        "type": "git",
+        "url": "file:../..//halogen-canvas"
+      },
+      "original": {
+        "ref": "animate",
+        "type": "git",
+        "url": "file:../..//halogen-canvas"
+      }
+    },
     "halogen-xterm": {
       "inputs": {
         "env": "env",
         "xterm": "xterm"
       },
       "locked": {
-        "lastModified": 1706360738,
-        "narHash": "sha256-ewJ2E9ODn+AQac2QaL5Ie8GwdHVTQJ+QnYkCWB80iiw=",
+        "lastModified": 1706361890,
+        "narHash": "sha256-3kzzEmtBf42p+r66R8bRmb/b4n80drjYbIFiEBwgiwA=",
         "owner": "grybiena",
         "repo": "halogen-xterm",
-        "rev": "b9d6e1114d4b2ebc54ddd8296f4ade023cdffb83",
+        "rev": "a63414178fdb5465697201576a4fcd2d9903b7b9",
         "type": "github"
       },
       "original": {
@@ -803,6 +825,7 @@
           "halogen-xterm",
           "env"
         ],
+        "halogen-canvas": "halogen-canvas",
         "halogen-xterm": "halogen-xterm",
         "leveldb": "leveldb",
         "xterm": [

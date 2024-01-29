@@ -2,7 +2,9 @@ module Example where
 
 import Prelude
 
+import Color (rgb)
 import Control.Monad.Rec.Class (class MonadRec)
+import Data.Int (toNumber)
 import Data.Lens ((.~), (^.))
 import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
@@ -17,8 +19,13 @@ import Example.Button (Query(..))
 import Example.Button as Button
 import Example.Editor as Editor
 import Example.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
+import Graphics.Canvas.Free (CanvasT, fillRect, fillText, rotate, setFillColor, translate)
 import Halogen as H
 import Halogen.Aff as HA
+import Halogen.Canvas as Canvas
+import Halogen.Canvas.Animate as Animate
+import Halogen.Canvas.Game (InputEvent(..))
+import Halogen.Canvas.Game as Game
 import Halogen.VDom.Driver (runUI)
 import Halogen.XShell (closeWindow, openWindow, queryWindow)
 import Halogen.XShell as Shell
@@ -27,6 +34,8 @@ import Halogen.XShell.Free (getShell, interpreter, modifyShell, terminal)
 import Halogen.XTerm.Free (loadAddons, options, rows, write, writeLn)
 import Halogen.XTerm.Free.Options (getCursorBlink, getFontFamily, setCursorBlink)
 import Type.Proxy (Proxy(..))
+import Web.HTML.Window.AnimationFrame (DOMHighResTimestamp(..))
+import Web.UIEvent.MouseEvent (clientX, clientY)
 
 
 main :: Effect Unit
@@ -34,7 +43,7 @@ main = do
   HA.runHalogenAff do
      body <- HA.awaitBody
      stdout <- AVar.empty
-     let shell :: ShellState Slots Unit Aff
+     let shell :: ShellState (Slots Aff) Unit Aff
          shell = ShellState { prompt: "> ", command: "", foreground: Nothing, commandEnv: commands }
      io <- runUI Shell.component shell body
      void $ io.query $ do
@@ -44,15 +53,21 @@ main = do
        interpreter (textInterpreter $ commandLine (prog commands)) 
      AVar.put io.query stdout
 
-type Slots =
+type Slots m =
   ( button :: H.Slot Button.Query Unit Unit 
   , editor :: H.Slot Maybe Unit Unit
+  , canvas :: H.Slot (CanvasT m) Unit Unit
+  , animation :: H.Slot Maybe Unit Unit 
+  , game :: H.Slot Maybe Unit Unit
   )
 
 _button = Proxy :: Proxy "button"
 _editor = Proxy :: Proxy "editor"
+_canvas = Proxy :: Proxy "canvas"
+_animation = Proxy :: Proxy "animation"
+_game = Proxy :: Proxy "game"
 
-commands :: forall o m. MonadAff m => MonadRec m => Array (Command Slots o m)
+commands :: forall o m. MonadAff m => MonadRec m => Array (Command (Slots m) o m)
 commands =
   [ { name: "rows"
     , description: [ "prints the number of rows in the terminal" ]
@@ -134,6 +149,82 @@ commands =
        traverse_ (\f -> liftAff $ deleteFile fs (FilePath f)) args
        done
     }
+  , { name: "canvas"
+    , description: [ "canvas example" ]
+    , cmd: \_ -> do
+        modifyShell (cmd .~ "")
+        openWindow _canvas unit Canvas.component { width: 200, height: 200 } (const $ pure unit)
+        let proc =  { stdin: const $ pure unit 
+                    , kill: closeWindow _canvas unit
+                    }
+            draw = do
+              setFillColor $ rgb 255 255 200
+              fillRect { x: 0.0, y: 0.0, width: 200.0, height: 200.0 }
+              setFillColor $ rgb 0 0 0
+              fillText "hello" { x: 50.0, y: 50.0 }
+        void $ queryWindow _canvas unit draw
+        modifyShell (\(ShellState s) -> ShellState s { foreground = Just proc })
+        terminal do
+           options $ setCursorBlink false
+           write "\r\n"
+        interpreter canceler
+    }
+  , { name: "animation"
+    , description: [ "canvas animation example" ]
+    , cmd: \_ -> do
+        modifyShell (cmd .~ "")
+        let animation (DOMHighResTimestamp t) = do 
+              setFillColor $ rgb 255 255 200
+              fillRect { x: 0.0, y: 0.0, width: 200.0, height: 200.0 }
+              setFillColor $ rgb 0 0 0
+              translate { translateX: 50.0, translateY: 50.0 }
+              rotate (t / 1000.0)
+              fillText "hello" { x: 0.0, y: 0.0 }
+        openWindow _canvas unit Animate.component { dimensions: { width: 200, height: 200 }, animation } (const $ pure unit)
+        let proc =  { stdin: const $ pure unit 
+                    , kill: closeWindow _canvas unit
+                    }
+        modifyShell (\(ShellState s) -> ShellState s { foreground = Just proc })
+        terminal do
+           options $ setCursorBlink false
+           write "\r\n"
+        interpreter canceler
+    }
+  , { name: "draw"
+    , description: [ "canvas drawing program example" ]
+    , cmd: \_ -> do
+        modifyShell (cmd .~ "")
+        let game = { dimensions: { width: 400, height: 400 }
+                   , world: { frame: 0, brush: Nothing }
+                   , draw: \w -> do
+                       when (w.frame == 1) do
+                          setFillColor $ rgb 255 255 200
+                          fillRect { x: 0.0, y: 0.0, width: 400.0, height: 400.0 }
+                          setFillColor $ rgb 0 0 0
+                          fillText "draw something!" { x: 0.0, y: 50.0 }
+                       flip traverse_ w.brush $ \{ x, y } -> fillRect { x, y, width: 5.0, height: 5.0 }
+                   , input: \i r w ->
+                       case i of
+                         MouseLeave _ -> w { brush = Nothing }
+                         MouseUp _ -> w { brush = Nothing }
+                         MouseDown e -> w { brush = Just { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top } }
+                         MouseMove e -> w { brush = const { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top } <$> w.brush } 
+                         _ -> w
+                   , animate: \_ w -> w { frame = w.frame + 1 }
+                   }
+                       
+        openWindow _canvas unit Game.component game (const $ pure unit)
+        let proc =  { stdin: const $ pure unit 
+                    , kill: closeWindow _canvas unit
+                    }
+        modifyShell (\(ShellState s) -> ShellState s { foreground = Just proc })
+        terminal do
+           options $ setCursorBlink false
+           write "\r\n"
+        interpreter canceler
+    }
+
+
   ]
   where
     basic c = const (c *> done)
@@ -141,4 +232,5 @@ commands =
        shell' <- getShell
        terminal $ write ("\r\n" <> shell' ^. prompt)
        modifyShell (cmd .~ "")
+
 

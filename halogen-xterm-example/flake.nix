@@ -7,6 +7,13 @@ rec {
     leveldb.url = "github:grybiena/leveldb";
     xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-xterm/env";
+    halogen-canvas = {
+      url = "git+file:../..//halogen-canvas?ref=animate";
+      inputs = {
+        env.follows = "halogen-xterm/env";
+      };
+    };
+
   };
   outputs = inputs@{ env, ... }:
     env.flake-utils.lib.eachDefaultSystem (system:
@@ -22,7 +29,7 @@ rec {
         purs-nix = env.purs-nix {
           inherit system; 
           overlays = with inputs; env.gen-overlays { inherit pkgs system; } {
-            inherit halogen-xterm xterm leveldb;
+            inherit halogen-canvas halogen-xterm xterm leveldb;
           };
         };
 
