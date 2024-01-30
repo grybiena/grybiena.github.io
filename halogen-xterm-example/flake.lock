@@ -308,18 +308,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1706546309,
-        "narHash": "sha256-0jtZFPSe7/oMa197cRmK/1zavxsjiLFoQhqM8T651FM=",
-        "ref": "animate",
-        "rev": "b8ac2ae2ebf35d1e34d723c654193273b28a5e10",
-        "revCount": 6,
-        "type": "git",
-        "url": "file:../..//halogen-canvas"
+        "lastModified": 1706608443,
+        "narHash": "sha256-tmE0uLqAiMepXPZQHfSGErX4m2P8eyVSmUUYN3cIQkY=",
+        "owner": "grybiena",
+        "repo": "halogen-canvas",
+        "rev": "d4e3034c55a9e0a9d480e77e2207b7c9f22a4298",
+        "type": "github"
       },
       "original": {
-        "ref": "animate",
-        "type": "git",
-        "url": "file:../..//halogen-canvas"
+        "owner": "grybiena",
+        "repo": "halogen-canvas",
+        "type": "github"
       }
     },
     "halogen-xterm": {

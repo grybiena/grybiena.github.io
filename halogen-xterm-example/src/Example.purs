@@ -4,12 +4,14 @@ import Prelude
 
 import Color (rgb)
 import Control.Monad.Rec.Class (class MonadRec)
+import Data.Array (cons, (:))
 import Data.Int (toNumber)
 import Data.Lens ((.~), (^.))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.String (joinWith)
 import Data.String as String
 import Data.Traversable (traverse_)
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Aff.AVar as AVar
@@ -19,13 +21,13 @@ import Example.Button (Query(..))
 import Example.Button as Button
 import Example.Editor as Editor
 import Example.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
-import Graphics.Canvas.Free (CanvasT, fillRect, fillText, rotate, setFillColor, translate)
+import Graphics.Canvas.Free (CanvasT, beginPath, fillRect, fillText, lineTo, moveTo, rotate, setFillColor, setLineWidth, setStrokeColor, stroke, translate)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.Canvas as Canvas
 import Halogen.Canvas.Animate as Animate
-import Halogen.Canvas.Game (InputEvent(..))
-import Halogen.Canvas.Game as Game
+import Halogen.Canvas.Interact (InputEvent(..))
+import Halogen.Canvas.Interact as Interact 
 import Halogen.VDom.Driver (runUI)
 import Halogen.XShell (closeWindow, openWindow, queryWindow)
 import Halogen.XShell as Shell
@@ -58,14 +60,14 @@ type Slots m =
   , editor :: H.Slot Maybe Unit Unit
   , canvas :: H.Slot (CanvasT m) Unit Unit
   , animation :: H.Slot Maybe Unit Unit 
-  , game :: H.Slot Maybe Unit Unit
+  , sketch :: H.Slot Maybe Unit Unit
   )
 
 _button = Proxy :: Proxy "button"
 _editor = Proxy :: Proxy "editor"
 _canvas = Proxy :: Proxy "canvas"
 _animation = Proxy :: Proxy "animation"
-_game = Proxy :: Proxy "game"
+_sketch = Proxy :: Proxy "sketch"
 
 commands :: forall o m. MonadAff m => MonadRec m => Array (Command (Slots m) o m)
 commands =
@@ -190,30 +192,43 @@ commands =
            write "\r\n"
         interpreter canceler
     }
-  , { name: "draw"
+  , { name: "sketch"
     , description: [ "canvas drawing program example" ]
     , cmd: \_ -> do
         modifyShell (cmd .~ "")
-        let game = { dimensions: { width: 400, height: 400 }
-                   , world: { frame: 0, brush: Nothing }
+        let sketch = { dimensions: { width: 400, height: 400 }
+                   , world: { line: Nothing, lines: [] }
                    , draw: \w -> do
-                       when (w.frame == 1) do
-                          setFillColor $ rgb 255 255 200
-                          fillRect { x: 0.0, y: 0.0, width: 400.0, height: 400.0 }
-                          setFillColor $ rgb 0 0 0
-                          fillText "draw something!" { x: 0.0, y: 50.0 }
-                       flip traverse_ w.brush $ \{ x, y } -> fillRect { x, y, width: 5.0, height: 5.0 }
+                       setFillColor $ rgb 255 255 200
+                       fillRect { x: 0.0, y: 0.0, width: 400.0, height: 400.0 }
+                       setStrokeColor $ rgb 0 0 0
+                       setLineWidth 5.0
+                       flip traverse_ (maybe w.lines (flip cons w.lines) w.line) $ \(f /\ t) -> do
+                          beginPath
+                          moveTo f
+                          lineTo t                       
+                          stroke
                    , input: \i r w ->
                        case i of
-                         MouseLeave _ -> w { brush = Nothing }
-                         MouseUp _ -> w { brush = Nothing }
-                         MouseDown e -> w { brush = Just { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top } }
-                         MouseMove e -> w { brush = const { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top } <$> w.brush } 
+                         MouseLeave _ -> w { line = Nothing }
+                         MouseUp _ ->
+                           w { line = Nothing
+                             , lines =
+                                 case w.line of
+                                   Nothing -> w.lines
+                                   Just so -> so:w.lines
+                             }
+                         MouseDown e ->
+                           let p = { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top }
+                            in  w { line = maybe (Just (p /\ p)) Just w.line }
+                         MouseMove e ->
+                           let p = { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top }
+                               update (f /\ _) = (f /\ p)
+                            in w { line = update <$> w.line }
                          _ -> w
-                   , animate: \_ w -> w { frame = w.frame + 1 }
                    }
                        
-        openWindow _canvas unit Game.component game (const $ pure unit)
+        openWindow _canvas unit Interact.component sketch (const $ pure unit)
         let proc =  { stdin: const $ pure unit 
                     , kill: closeWindow _canvas unit
                     }

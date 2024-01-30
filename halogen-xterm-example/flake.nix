@@ -8,7 +8,7 @@ rec {
     xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-xterm/env";
     halogen-canvas = {
-      url = "git+file:../..//halogen-canvas?ref=animate";
+      url = "github:grybiena/halogen-canvas";
       inputs = {
         env.follows = "halogen-xterm/env";
       };
@@ -49,26 +49,9 @@ rec {
           module = "Example";
         };
 
-        test-app = builtins.readFile (ps.bundle bundle);
-        test-index = pkgs.writeTextFile
-          { name =  "index.html";
-            text = ''
-                   <!DOCTYPE html>
-                   <html lang="en">
-                     <head>
-                       <meta charset="UTF-8" />
-                       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                       <title>halogen-xterm example</title>
-                     </head>
-                     <body>
-                      <script>${test-app}</script>
-                     </body>
-                   </html>
-                   '';
-          };
 
       in 
-         { packages.default = test-index;
+         { packages.default = ps.bundle bundle;
 
            devShells.default = 
              pkgs.mkShell
