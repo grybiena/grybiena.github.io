@@ -310,16 +310,15 @@
       "locked": {
         "lastModified": 1706626993,
         "narHash": "sha256-8cvbGR0hx+d5/7e6ZDhZ8P5/yIElYr/HIowX9rGKlWw=",
-        "ref": "main",
+        "owner": "grybiena",
+        "repo": "halogen-canvas",
         "rev": "a075e703273424502fd841fb36e75ee0583193db",
-        "revCount": 5,
-        "type": "git",
-        "url": "file:../../halogen-canvas"
+        "type": "github"
       },
       "original": {
-        "ref": "main",
-        "type": "git",
-        "url": "file:../../halogen-canvas"
+        "owner": "grybiena",
+        "repo": "halogen-canvas",
+        "type": "github"
       }
     },
     "halogen-xterm": {

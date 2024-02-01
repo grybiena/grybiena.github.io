@@ -8,7 +8,7 @@ rec {
     xterm.follows = "halogen-xterm/xterm";
     env.follows = "halogen-xterm/env";
     halogen-canvas = {
-      url = "github:grybiena/halogen-canvas";
+      url = "git+file:../../halogen-canvas?ref=main";
       inputs = {
         env.follows = "halogen-xterm/env";
       };
