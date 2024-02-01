@@ -2,15 +2,19 @@ module Main where
 
 import Prelude hiding (top)
 
-import CSS (black, border, borderColor, display, flex, flexDirection, padding, px, solid)
+import CSS (black, border, display, flex, flexDirection, padding, px, solid)
 import CSS.Common (center)
-import CSS.Flexbox (alignItems, column, flexWrap, nowrap, row)
-import Data.Generic.Rep (class Generic)
-import Data.Maybe (Maybe(..))
-import Data.Show.Generic (genericShow)
+import CSS.Flexbox (alignItems, column, row)
+import Data.Array as Array
+import Data.Map (Map)
+import Data.Map as Map
+import Data.Maybe (Maybe(..), maybe)
+import Data.String (drop)
+import Data.Tuple.Nested (type (/\), (/\))
 import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (class MonadEffect)
+import Effect.Class.Console (log)
 import Examples.Halogen.Infinite.Scroll.Main as InfiniteScroll
 import Examples.Halogen.XTerm.Component as XTerm
 import Halogen as H
@@ -23,78 +27,96 @@ import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Event.Event (Event, target)
+import Web.HTML (window)
+import Web.HTML.Location (hash)
+import Web.HTML.Window (location)
+
+type Example =
+  { id :: String
+  , name :: String
+  , component :: H.Component Maybe Unit Unit Aff
+  }
+
+type Examples = Array Example
 
 
 main :: Effect Unit
 main = do
   HA.runHalogenAff do
     body <- HA.awaitBody
-    void $ runUI component unit body
+    let examples =
+          [ { id: "xterm"
+            , name: "XTerm"
+            , component: XTerm.component
+            }
+          , { id: "infinite-scroll"
+            , name: "Infinite Scroll"
+            , component: InfiniteScroll.feedComponent
+            }
+          ]
+    void $ runUI component ("xterm" /\ examples) body
 
-type Slots = ( infiniteScroll :: forall q o. H.Slot q o Unit
-             , xterm :: forall q o. H.Slot q o Unit
-             ) 
+type Slots = ( example :: H.Slot Maybe Unit String ) 
 
-_infiniteScroll = Proxy :: Proxy "infiniteScroll"
-_xterm = Proxy :: Proxy "xterm"
+_example = Proxy :: Proxy "example"
 
 type State =
-  { example :: Example
+  { selected :: String 
+  , examples :: Map String Example
   }
   
 
-component :: forall q o . H.Component q Unit o Aff
+
+component :: forall q o . H.Component q (String /\ Examples) o Aff
 component =
   H.mkComponent
-    { initialState: const { example: InfiniteScroll } 
+    { initialState: \(selected /\ e) -> { selected, examples: Map.fromFoldable ((\x -> x.id /\ x ) <$> e) } 
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
+                                     , initialize = Just Initialize
+                                     }
     }
 
-data Example =
-    InfiniteScroll
-  | XTerm
-
-derive instance Generic Example _
-
-instance Show Example where
-  show = genericShow
 
 data Action =
-    SelectExample Example
+    Initialize
+  | SelectExample String 
 
 selectExample :: Event -> Action
-selectExample e =
-  case (\x -> (unsafeCoerce x).value) <$> target e of
-    Just "InfiniteScroll" -> SelectExample InfiniteScroll
-    _ -> SelectExample XTerm
+selectExample e = maybe (SelectExample "") SelectExample $ (\x -> (unsafeCoerce x).value) <$> target e 
 
 handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action Slots o m Unit 
 handleAction =
   case _ of
-    SelectExample e -> H.modify_ (\st -> st { example = e }) 
+    Initialize -> do
+       h <- H.liftEffect $ window >>= location >>= hash
+       H.liftEffect $ log $ drop 1 h 
+       H.modify_ $ \st ->
+         case Map.lookup (drop 1 h) st.examples of
+           Nothing -> st
+           Just so -> st { selected = so.id }
+       pure unit
+    SelectExample e -> H.modify_ (\st -> st { selected = e }) 
 
-selector :: Example -> H.ComponentHTML Action Slots Aff 
-selector e = 
+
+selector :: State -> H.ComponentHTML Action Slots Aff 
+selector st = 
   HH.select
-    [ HP.value "InfiniteScroll"
+    [ HP.value st.selected 
     , HE.onChange selectExample
     ]
-    [ HH.option
-        [ HP.value "InfiniteScroll"
-        ]
-        [ HH.text "InfiniteScroll"
-        ]
-    , HH.option
-        [ HP.value "XTerm"
-        ]
-        [ HH.text "XTerm"
-        ]
-    ]
+    (mkOption <$> Array.fromFoldable (Map.values st.examples))
+    where
+      mkOption v =
+        HH.option
+          [ HP.value v.id
+          ]
+          [ HH.text v.name
+          ]
 
 
 render :: State -> H.ComponentHTML Action Slots Aff 
-render t =
+render st =
   HH.div
     [ style do
         display flex
@@ -107,16 +129,16 @@ render t =
             alignItems center
             border solid (px 1.0) black
         ]
-        [ HH.h3_ [ HH.text "Examples" ]
-        , HH.div [ style $ padding (px 0.0) (px 0.0) (px 0.0) (px 30.0)] [ selector t.example ]
+        [ HH.h3_ [ HH.text "Example" ]
+        , HH.div [ style $ padding (px 0.0) (px 0.0) (px 0.0) (px 10.0)] [ selector st ]
         ]
     , HH.div
         [ style do
             border solid (px 1.0) black
         ]
-        [ case t.example of
-            InfiniteScroll -> HH.slot_ _infiniteScroll unit InfiniteScroll.feedComponent unit
-            XTerm -> HH.slot_ _xterm unit XTerm.component unit
+        [ case Map.lookup st.selected st.examples of
+            Just v -> HH.slot_ _example v.id v.component unit
+            Nothing -> HH.div_ []
         ]
     ]
  
