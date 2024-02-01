@@ -1,4 +1,4 @@
-module Example.Picture where
+module Examples.Halogen.Infinite.Scroll.Picture where
 
 import CSS (border, height, solid, width)
 import CSS.Size (px)

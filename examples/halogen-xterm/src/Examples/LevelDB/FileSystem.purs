@@ -1,4 +1,4 @@
-module Example.FileSystem where
+module Examples.LevelDB.FileSystem where
 
 import Prelude
 

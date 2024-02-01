@@ -1,4 +1,4 @@
-module Example.Editor where
+module Examples.Halogen.Widgets.Editor where
 
 import Prelude
 
@@ -11,7 +11,7 @@ import Data.Maybe (Maybe(..))
 import Data.Traversable (traverse_)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Aff.Class (class MonadAff)
-import Example.FileSystem (FilePath, FileSystem, openFileSystem, readFile, writeFile)
+import Examples.LevelDB.FileSystem (FilePath, FileSystem, openFileSystem, readFile, writeFile)
 import Halogen (RefLabel(..))
 import Halogen as H
 import Halogen.HTML as HH

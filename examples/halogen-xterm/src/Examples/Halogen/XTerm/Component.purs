@@ -1,4 +1,5 @@
-module Example where
+module Examples.Halogen.XTerm.Component where
+
 
 import Prelude
 
@@ -12,27 +13,23 @@ import Data.String (joinWith)
 import Data.String as String
 import Data.Traversable (traverse_)
 import Data.Tuple.Nested ((/\))
-import Effect (Effect)
-import Effect.Aff (Aff)
-import Effect.Aff.AVar as AVar
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
-import Example.Button (Query(..))
-import Example.Button as Button
-import Example.Editor as Editor
-import Example.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
+import Examples.Halogen.Widgets.Button (Query(..))
+import Examples.Halogen.Widgets.Button as Button
+import Examples.Halogen.Widgets.Editor as Editor
+import Examples.LevelDB.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
 import Graphics.Canvas.Free (CanvasT, beginPath, fillRect, fillText, lineTo, moveTo, rotate, setFillColor, setLineWidth, setStrokeColor, stroke, translate)
 import Halogen as H
-import Halogen.Aff as HA
 import Halogen.Canvas as Canvas
 import Halogen.Canvas.Animate as Animate
 import Halogen.Canvas.Interact (InputEvent(..))
-import Halogen.Canvas.Interact as Interact 
-import Halogen.VDom.Driver (runUI)
+import Halogen.Canvas.Interact as Interact
+import Halogen.HTML as HH
 import Halogen.XShell (closeWindow, openWindow, queryWindow)
 import Halogen.XShell as Shell
 import Halogen.XShell.CommandLine (Command, ShellState(..), canceler, prog, cmd, commandLine, prompt, textInterpreter)
-import Halogen.XShell.Free (getShell, interpreter, modifyShell, terminal)
+import Halogen.XShell.Free (ShellM, getShell, interpreter, modifyShell, terminal)
 import Halogen.XTerm.Free (loadAddons, options, rows, write, writeLn)
 import Halogen.XTerm.Free.Options (getCursorBlink, getFontFamily, setCursorBlink)
 import Type.Proxy (Proxy(..))
@@ -40,22 +37,40 @@ import Web.HTML.Window.AnimationFrame (DOMHighResTimestamp(..))
 import Web.UIEvent.MouseEvent (clientX, clientY)
 
 
-main :: Effect Unit
-main = do
-  HA.runHalogenAff do
-     body <- HA.awaitBody
-     stdout <- AVar.empty
-     let shell :: ShellState (Slots Aff) Unit Aff
-         shell = ShellState { prompt: "> ", command: "", foreground: Nothing, commandEnv: commands }
-     io <- runUI Shell.component shell body
-     void $ io.query $ do
-       terminal do
-         loadAddons true
-         write "> "
-       interpreter (textInterpreter $ commandLine (prog commands)) 
-     AVar.put io.query stdout
+type Slots m = ( shell :: forall o. H.Slot (ShellM (Windows m) (ShellState (Windows m) o m) o m) o Unit ) 
 
-type Slots m =
+_shell = Proxy :: Proxy "shell"
+
+component :: forall q i o m. MonadAff m => MonadRec m => H.Component q i o m 
+component =
+  H.mkComponent
+    { initialState: const unit 
+    , render
+    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction
+                                     , initialize = Just Initialize
+                                     }
+    }
+
+data Action = Initialize
+
+handleAction :: forall s o m. MonadAff m => MonadRec m => Action -> H.HalogenM s Action (Slots m) o m Unit 
+handleAction =
+  case _ of
+    Initialize ->
+      void $ H.query _shell unit $ do
+        terminal do
+          loadAddons true
+          write "> "
+        interpreter (textInterpreter $ commandLine (prog commands)) 
+
+shell :: forall o m. MonadAff m => MonadRec m => ShellState (Windows m) o m 
+shell = ShellState { prompt: "> ", command: "", foreground: Nothing, commandEnv: commands }
+
+render :: forall s m. MonadAff m => MonadRec m => s -> H.ComponentHTML Action (Slots m) m 
+render = const $ HH.slot_ _shell unit Shell.component shell 
+
+
+type Windows m =
   ( button :: H.Slot Button.Query Unit Unit 
   , editor :: H.Slot Maybe Unit Unit
   , canvas :: H.Slot (CanvasT m) Unit Unit
@@ -69,7 +84,7 @@ _canvas = Proxy :: Proxy "canvas"
 _animation = Proxy :: Proxy "animation"
 _sketch = Proxy :: Proxy "sketch"
 
-commands :: forall o m. MonadAff m => MonadRec m => Array (Command (Slots m) o m)
+commands :: forall o m. MonadAff m => MonadRec m => Array (Command (Windows m) o m)
 commands =
   [ { name: "rows"
     , description: [ "prints the number of rows in the terminal" ]

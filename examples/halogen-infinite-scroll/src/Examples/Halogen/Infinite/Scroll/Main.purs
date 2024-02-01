@@ -1,4 +1,4 @@
-module Example where
+module Examples.Halogen.Infinite.Scroll.Main where
 
 import Prelude hiding (top)
 
@@ -16,7 +16,7 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (class MonadEffect)
 import Effect.Timer (IntervalId, clearInterval, setInterval)
-import Example.Picture (PicIndex(..))
+import Examples.Halogen.Infinite.Scroll.Picture (PicIndex(..))
 import Halogen (PropName(..), SubscriptionId)
 import Halogen as H
 import Halogen.Aff as HA
@@ -27,11 +27,11 @@ import Halogen.HTML.Properties as HP
 import Halogen.Infinite.Scroll (Query(..), defaultFeedOptions)
 import Halogen.Infinite.Scroll as HIS
 import Halogen.Infinite.Scroll.State (FeedState)
-import Halogen.Shell as Shell
-import Halogen.Shell.Free (terminal)
 import Halogen.Subscription as HS
-import Halogen.Terminal.Free (loadAddons, writeLn)
 import Halogen.VDom.Driver (runUI)
+import Halogen.XShell as Shell
+import Halogen.XShell.Free (ShellM, terminal)
+import Halogen.XTerm.Free (writeLn)
 import Type.Proxy (Proxy(..))
 
 
@@ -42,7 +42,7 @@ main = do
     void $ runUI feedComponent unit body
 
 type Slots = ( feed :: H.Slot (HIS.Query PicIndex) (FeedState PicIndex) Boolean
-             , shell :: forall o. H.Slot (Shell.Query String Unit) o Unit
+             , shell :: forall w o. H.Slot (ShellM w Unit o Aff) o Unit
              ) 
 
 _feed = Proxy :: Proxy "feed"
@@ -71,8 +71,9 @@ data Action =
   | AutoScroll
   | StateChange (FeedState PicIndex)
 
-logShell :: String -> Shell.Query String Unit Unit
-logShell s = Shell.Query s identity
+
+logShell :: forall w s o m . String -> ShellM w s o m Unit
+logShell s = terminal $ writeLn s 
 
 
 handleAction :: forall o m. MonadEffect m => Action -> H.HalogenM State Action Slots o m Unit 
@@ -132,7 +133,7 @@ renderExample t =
              [ HH.slot _feed t.top HIS.component ((defaultFeedOptions (PicIndex 150)) { enableTop = t.top, debounce = Milliseconds 0.0, deadZone = 1 }) StateChange
              ]
     , HH.div_
-        [ HH.slot_ _shell unit Shell.component shell
+        [ HH.slot_ _shell unit Shell.component unit 
         , HH.div_
             [ HH.input [ HP.prop (PropName "type") InputCheckbox
                        , HE.onChange (const ToggleTop)
@@ -153,14 +154,4 @@ renderExample t =
             ]
         ]
     ]
-  where
-    shell =
-      { init: do
-          terminal do
-            loadAddons false 
-      , query: terminal <<< writeLn
-      , shell: unit 
-      }
-    
-
-
+   
