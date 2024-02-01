@@ -88,6 +88,26 @@
         "type": "github"
       }
     },
+    "examples-halogen-canvas": {
+      "inputs": {
+        "env": [
+          "env"
+        ],
+        "halogen-canvas": [
+          "halogen-canvas"
+        ]
+      },
+      "locked": {
+        "lastModified": 1,
+        "narHash": "sha256-8LJ2WpQHw9AUpFQviEY1qK67B7UykJi1giwuVsZi1J8=",
+        "path": "../examples/halogen-canvas",
+        "type": "path"
+      },
+      "original": {
+        "path": "../examples/halogen-canvas",
+        "type": "path"
+      }
+    },
     "examples-halogen-infinite-scroll": {
       "inputs": {
         "env": [
@@ -939,6 +959,7 @@
     "root": {
       "inputs": {
         "env": "env",
+        "examples-halogen-canvas": "examples-halogen-canvas",
         "examples-halogen-infinite-scroll": "examples-halogen-infinite-scroll",
         "examples-halogen-xterm": "examples-halogen-xterm",
         "halogen-canvas": "halogen-canvas",

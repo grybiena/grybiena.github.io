@@ -17,6 +17,7 @@ import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
 import Examples.Halogen.Infinite.Scroll.Main as InfiniteScroll
 import Examples.Halogen.XTerm.Component as XTerm
+import Examples.Halogen.Canvas.Sketch as Sketch
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -52,6 +53,10 @@ main = do
           , { id: "infinite-scroll"
             , name: "Infinite Scroll"
             , component: InfiniteScroll.feedComponent
+            }
+          , { id: "halogen-canvas-sketch"
+            , name: "Line Sketch"
+            , component: Sketch.component
             }
           ]
     void $ runUI component ("xterm" /\ examples) body
