@@ -2,13 +2,6 @@ rec {
   description = "examples-halogen-canvas";
   inputs = {
     env.url = "github:grybiena/purescript-environment";  
-#    halogen-xterm = {
-#      url = "github:grybiena/halogen-xterm";
-#      inputs = {
-#        env.follows = "env";
-#      };
-#    };
-#    xterm.follows = "halogen-xterm/xterm";
     halogen-canvas = {
       url = "github:grybiena/halogen-canvas";
       inputs = {

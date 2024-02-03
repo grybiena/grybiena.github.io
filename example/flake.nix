@@ -24,8 +24,6 @@ rec {
       url = "path:../examples/halogen-canvas";
       inputs = {
         env.follows = "env";
-#        xterm.follows = "xterm";
-#        halogen-xterm.follows = "halogen-xterm";
         halogen-canvas.follows = "halogen-canvas";
       };
     };
