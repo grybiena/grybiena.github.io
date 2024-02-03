@@ -99,7 +99,7 @@
       },
       "locked": {
         "lastModified": 1,
-        "narHash": "sha256-lIru1SlLWvs76ZfbDTl5oL8hndpI21+j6+A+V4ibKAM=",
+        "narHash": "sha256-su4cppwrE7XGsp01/KaoegrC3uj2eV4mnxmc2KYDph0=",
         "path": "../examples/halogen-canvas",
         "type": "path"
       },

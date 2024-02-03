@@ -2,14 +2,14 @@ module Examples.Halogen.Canvas.Sketch where
 
 import Prelude hiding (top)
 
-import CSS (display, flex, flexDirection)
+import CSS (backgroundColor, black, border, display, flex, flexDirection, px, solid)
 import CSS.Flexbox (row)
 import Color (rgb)
 import Control.Monad.Rec.Class (class MonadRec)
-import Data.Array (cons, length, zip, (..), (:))
+import Data.Array (cons, deleteAt, length, zip, (..), (:))
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), maybe)
-import Data.Traversable (traverse_)
+import Data.TraversableWithIndex (traverseWithIndex)
 import Data.Tuple.Nested (type (/\), (/\))
 import Effect.Aff.Class (class MonadAff)
 import Graphics.Canvas.Free (CanvasT, Coordinate, beginPath, clearRect, fillRect, getHeight, getWidth, lineTo, moveTo, setFillColor, setLineWidth, setStrokeColor, stroke, withContext)
@@ -19,6 +19,7 @@ import Halogen.Canvas.Interact (MouseInput(..), Output(..))
 import Halogen.Canvas.Interact as Interact
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
+import Halogen.HTML.Events as HE
 import Type.Prelude (Proxy(..))
 import Web.UIEvent.MouseEvent (clientY, clientX)
 
@@ -28,24 +29,29 @@ _sketch = Proxy :: Proxy "sketch"
 
 type Line = Coordinate /\ Coordinate
 
-data Action = InputEvent Interact.Output
+data Action =
+    Initialize
+  | InputEvent Interact.Output
+  | Select Int
+  | Delete Int
 
 type State =
   { dimensions :: Dimensions
   , line :: Maybe Line
   , lines :: Array Line
+  , selected :: Maybe Int
   }
 
 component :: forall q i o m . MonadAff m => MonadRec m => H.Component q i o m 
 component =
   H.mkComponent
-    { initialState: const { dimensions: { width: 400, height: 400 }, line: Nothing, lines: [] } 
+    { initialState: const { dimensions: { width: 400, height: 400 }, line: Nothing, lines: [], selected: Nothing } 
     , render
-    , eval: H.mkEval $ H.defaultEval { handleAction = handleAction } 
+    , eval: H.mkEval $ H.defaultEval { initialize = Just Initialize, handleAction = handleAction } 
     }
 
 render :: forall m. MonadAff m => MonadRec m => State -> H.ComponentHTML Action (Slots m) m 
-render { dimensions, lines } =
+render st@{ dimensions } =
   HH.div
     [ style do
         display flex
@@ -54,22 +60,44 @@ render { dimensions, lines } =
     [ HH.slot _sketch unit Interact.component dimensions InputEvent 
     , HH.div_
         [ HH.h3_ [ HH.text "Lines" ]
-        , renderLines lines
+        , renderLines st 
         ]
     ]
 
-renderLines :: forall m. MonadAff m => MonadRec m => Array Line -> H.ComponentHTML Action (Slots m) m 
-renderLines lines = HH.div_ $ renderLine <$> (zip (0 .. (length lines)) lines)
+renderLines :: forall m. MonadAff m => MonadRec m => State -> H.ComponentHTML Action (Slots m) m 
+renderLines { lines, selected } = HH.div_ $ renderLine <$> (zip (0 .. (length lines)) lines)
   where
     renderLine (idx /\ start /\ end) =
-      HH.div_ [ HH.text $ show idx <> " " <> show start <> " " <> show end ]
+      HH.div
+        [ style do
+            border solid (px 1.0) black
+            when (Just idx == selected) $ backgroundColor (rgb 180 180 180) 
+        , HE.onMouseOver (const $ Select idx)
+
+        ]
+        [ HH.button [ HE.onClick (const $ Delete idx) ] [ HH.text "delete" ]
+        , HH.text $ show start <> " " <> show end
+        ]
 
 
 handleAction :: forall o m. Action -> H.HalogenM State Action (Slots m) o m Unit
 handleAction =
   case _ of
+    Initialize -> H.get >>= clearAndDraw
     InputEvent i -> do
+      H.modify_ (\st -> st { selected = Nothing })
       s <- interact i
+      clearAndDraw s
+    Select i -> do
+      s <- H.modify (\st -> st { selected = Just i })
+      clearAndDraw s
+    Delete i -> do
+      s <- H.modify (\st -> st { selected = Nothing
+                               , lines = maybe st.lines identity $ deleteAt i st.lines
+                               })
+      clearAndDraw s
+  where
+    clearAndDraw s = 
       void $ H.query _sketch unit do
          withContext do
            width <- getWidth
@@ -78,17 +106,22 @@ handleAction =
            draw s
 
 
+
 draw :: forall m. State -> CanvasT m Unit
 draw w = do
   setFillColor $ rgb 255 255 200
   fillRect { x: 0.0, y: 0.0, width: 400.0, height: 400.0 }
-  setStrokeColor $ rgb 0 0 0
   setLineWidth 5.0
-  flip traverse_ (maybe w.lines (flip cons w.lines) w.line) $ \(f /\ t) -> do
+  void $ flip traverseWithIndex (maybe w.lines (flip cons w.lines) w.line) $ \i (f /\ t) -> do
      beginPath
      moveTo f
-     lineTo t                       
+     lineTo t
+     if (Just i == w.selected)
+       then setStrokeColor $ rgb 255 0 0
+       else setStrokeColor $ rgb 0 0 0
      stroke
+
+
 
 interact :: forall o m. Interact.Output -> H.HalogenM State Action (Slots m) o m State
 interact =
