@@ -4,6 +4,7 @@
     dependencies =
       [ examples-halogen-xterm 
         examples-halogen-infinite-scroll
+        examples-halogen-canvas
         xterm
         halogen-xterm
         halogen-infinite-scroll

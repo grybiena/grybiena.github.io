@@ -20,6 +20,13 @@ rec {
         halogen-infinite-scroll.follows = "halogen-infinite-scroll";
       };
     };
+    examples-halogen-canvas = {
+      url = "path:../examples/halogen-canvas";
+      inputs = {
+        env.follows = "env";
+        halogen-canvas.follows = "halogen-canvas";
+      };
+    };
     halogen-canvas = {
       url = "github:grybiena/halogen-canvas";
       inputs = {

@@ -5,26 +5,22 @@ import Prelude
 
 import Color (rgb)
 import Control.Monad.Rec.Class (class MonadRec)
-import Data.Array (cons, (:))
-import Data.Int (toNumber)
 import Data.Lens ((.~), (^.))
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe(..))
 import Data.String (joinWith)
 import Data.String as String
 import Data.Traversable (traverse_)
-import Data.Tuple.Nested ((/\))
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
 import Examples.Halogen.Widgets.Button (Query(..))
 import Examples.Halogen.Widgets.Button as Button
 import Examples.Halogen.Widgets.Editor as Editor
 import Examples.LevelDB.FileSystem (FilePath(..), deleteFile, listFiles, openFileSystem)
-import Graphics.Canvas.Free (CanvasT, beginPath, fillRect, fillText, lineTo, moveTo, rotate, setFillColor, setLineWidth, setStrokeColor, stroke, translate)
+import Graphics.Canvas.Free (CanvasT, fillRect, fillText, rotate, setFillColor, translate)
 import Halogen as H
 import Halogen.Canvas as Canvas
 import Halogen.Canvas.Animate as Animate
-import Halogen.Canvas.Interact (InputEvent(..))
-import Halogen.Canvas.Interact as Interact
+
 import Halogen.HTML as HH
 import Halogen.XShell (closeWindow, openWindow, queryWindow)
 import Halogen.XShell as Shell
@@ -34,7 +30,6 @@ import Halogen.XTerm.Free (loadAddons, options, rows, write, writeLn)
 import Halogen.XTerm.Free.Options (getCursorBlink, getFontFamily, setCursorBlink)
 import Type.Proxy (Proxy(..))
 import Web.HTML.Window.AnimationFrame (DOMHighResTimestamp(..))
-import Web.UIEvent.MouseEvent (clientX, clientY)
 
 
 type Slots m = ( shell :: forall o. H.Slot (ShellM (Windows m) (ShellState (Windows m) o m) o m) o Unit ) 
@@ -207,53 +202,6 @@ commands =
            write "\r\n"
         interpreter canceler
     }
-  , { name: "sketch"
-    , description: [ "canvas drawing program example" ]
-    , cmd: \_ -> do
-        modifyShell (cmd .~ "")
-        let sketch = { dimensions: { width: 400, height: 400 }
-                   , world: { line: Nothing, lines: [] }
-                   , draw: \w -> do
-                       setFillColor $ rgb 255 255 200
-                       fillRect { x: 0.0, y: 0.0, width: 400.0, height: 400.0 }
-                       setStrokeColor $ rgb 0 0 0
-                       setLineWidth 5.0
-                       flip traverse_ (maybe w.lines (flip cons w.lines) w.line) $ \(f /\ t) -> do
-                          beginPath
-                          moveTo f
-                          lineTo t                       
-                          stroke
-                   , input: \i r w ->
-                       case i of
-                         MouseLeave _ -> w { line = Nothing }
-                         MouseUp _ ->
-                           w { line = Nothing
-                             , lines =
-                                 case w.line of
-                                   Nothing -> w.lines
-                                   Just so -> so:w.lines
-                             }
-                         MouseDown e ->
-                           let p = { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top }
-                            in  w { line = maybe (Just (p /\ p)) Just w.line }
-                         MouseMove e ->
-                           let p = { x: toNumber (clientX e) - r.left, y: toNumber (clientY e) - r.top }
-                               update (f /\ _) = (f /\ p)
-                            in w { line = update <$> w.line }
-                         _ -> w
-                   }
-                       
-        openWindow _canvas unit Interact.component sketch (const $ pure unit)
-        let proc =  { stdin: const $ pure unit 
-                    , kill: closeWindow _canvas unit
-                    }
-        modifyShell (\(ShellState s) -> ShellState s { foreground = Just proc })
-        terminal do
-           options $ setCursorBlink false
-           write "\r\n"
-        interpreter canceler
-    }
-
 
   ]
   where

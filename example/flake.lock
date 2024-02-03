@@ -88,6 +88,26 @@
         "type": "github"
       }
     },
+    "examples-halogen-canvas": {
+      "inputs": {
+        "env": [
+          "env"
+        ],
+        "halogen-canvas": [
+          "halogen-canvas"
+        ]
+      },
+      "locked": {
+        "lastModified": 1,
+        "narHash": "sha256-lIru1SlLWvs76ZfbDTl5oL8hndpI21+j6+A+V4ibKAM=",
+        "path": "../examples/halogen-canvas",
+        "type": "path"
+      },
+      "original": {
+        "path": "../examples/halogen-canvas",
+        "type": "path"
+      }
+    },
     "examples-halogen-infinite-scroll": {
       "inputs": {
         "env": [
@@ -132,7 +152,7 @@
       },
       "locked": {
         "lastModified": 1,
-        "narHash": "sha256-o9QQKW20o1ViXtWQHTq3RGTle8VQWlWcK8KrdMKteVg=",
+        "narHash": "sha256-oTcTIjQZikL5ZTzsWX6QKPMJDUZSSE6ZzRO2hEt/25o=",
         "path": "../examples/halogen-xterm",
         "type": "path"
       },
@@ -366,11 +386,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1706626993,
-        "narHash": "sha256-8cvbGR0hx+d5/7e6ZDhZ8P5/yIElYr/HIowX9rGKlWw=",
+        "lastModified": 1706957990,
+        "narHash": "sha256-khf12ZYRIMDnipTtfvLxt8hXJ7CdUVzSAMlTy5PKvE4=",
         "owner": "grybiena",
         "repo": "halogen-canvas",
-        "rev": "a075e703273424502fd841fb36e75ee0583193db",
+        "rev": "1de25ff6f91cd9dbef10a0f4d1dc446b33db402d",
         "type": "github"
       },
       "original": {
@@ -447,11 +467,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1706202161,
-        "narHash": "sha256-2splI+s+eru6Pq6IiESobAHzcQUbq3spmzim/Hxcb+k=",
+        "lastModified": 1706952425,
+        "narHash": "sha256-NRLuOErdhfJ1kA1cEsgFMPFM1VE005kwmLrQ46pJpck=",
         "owner": "grybiena",
         "repo": "leveldb",
-        "rev": "205783604f6f113e5f0126250697ae674fe514c1",
+        "rev": "027d2864064f6b99efbcc911d92c7bc8923b1b03",
         "type": "github"
       },
       "original": {
@@ -939,6 +959,7 @@
     "root": {
       "inputs": {
         "env": "env",
+        "examples-halogen-canvas": "examples-halogen-canvas",
         "examples-halogen-infinite-scroll": "examples-halogen-infinite-scroll",
         "examples-halogen-xterm": "examples-halogen-xterm",
         "halogen-canvas": "halogen-canvas",
