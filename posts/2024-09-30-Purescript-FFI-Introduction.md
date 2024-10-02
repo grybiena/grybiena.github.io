@@ -1,4 +1,4 @@
-Purescript has a powerful and easy to use foreign function interface (FFI). This lets you make bindings into javascript code so you can compile anything javascript directly into your project.
+[Purescript](https://www.purescript.org) has a powerful and easy to use foreign function interface (FFI). This lets you make bindings into javascript code so you can compile anything javascript directly into your project.
 
 #### Here's an example
 
