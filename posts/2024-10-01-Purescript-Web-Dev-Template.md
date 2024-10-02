@@ -1,4 +1,4 @@
-This blog is a purescript UI hosted by github pages. It renders the blog posts using [markdown-it](https://github.com/markdown-it/markdown-it) for formatting and [highlightjs](https://github.com/highlightjs/highlight.js) for code highlighting.
+This blog is a [purescript-halogen](https://pursuit.purescript.org/packages/purescript-halogen/7.0.0) UI hosted by github pages. It renders the blog posts using [markdown-it](https://github.com/markdown-it/markdown-it) for formatting and [highlightjs](https://github.com/highlightjs/highlight.js) for code highlighting.
 
 The starting point for development was my [purescipt web dev template](https://github.com/grybiena/ps-webdev-template). This template contains a development server and frontend app that reloads the page whenever the source code changes.
 
