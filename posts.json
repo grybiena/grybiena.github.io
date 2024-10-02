@@ -1,5 +1,9 @@
 [{ "title": "Purescript Web Dev Template"
  , "date": "2024-10-01"
  , "post": "2024-10-01-Purescript-Web-Dev-Template.md"
+ },
+ { "title": "Purescript FFI Introduction"
+ , "date": "2024-09-30"
+ , "post": "2024-09-30-Purescript-FFI-Introduction.md"
  }
 ]
