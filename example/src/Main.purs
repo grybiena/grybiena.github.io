@@ -15,9 +15,9 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Effect.Class (class MonadEffect)
 import Effect.Class.Console (log)
+import Examples.Halogen.Canvas.Sketch as Sketch
 import Examples.Halogen.Infinite.Scroll.Main as InfiniteScroll
 import Examples.Halogen.XTerm.Component as XTerm
-import Examples.Halogen.Canvas.Sketch as Sketch
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
@@ -29,7 +29,7 @@ import Type.Proxy (Proxy(..))
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Event.Event (Event, target)
 import Web.HTML (window)
-import Web.HTML.Location (hash)
+import Web.HTML.Location (hash, setHash)
 import Web.HTML.Window (location)
 
 type Example =
@@ -101,7 +101,9 @@ handleAction =
            Nothing -> st
            Just so -> st { selected = so.id }
        pure unit
-    SelectExample e -> H.modify_ (\st -> st { selected = e }) 
+    SelectExample e -> do
+      H.liftEffect $ window >>= location >>= setHash e
+      H.modify_ (\st -> st { selected = e }) 
 
 
 selector :: State -> H.ComponentHTML Action Slots Aff 

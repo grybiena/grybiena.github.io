@@ -15,12 +15,15 @@ import Effect.Aff.Class (class MonadAff)
 import Graphics.Canvas.Free (CanvasT, Coordinate, beginPath, clearRect, fillRect, getHeight, getWidth, lineTo, moveTo, setFillColor, setLineWidth, setStrokeColor, stroke, withContext)
 import Halogen as H
 import Halogen.Canvas (Dimensions)
-import Halogen.Canvas.Interact (MouseInput(..), Output(..))
+import Halogen.Canvas.Interact (MouseInput(..), Output(..), TouchInput(..))
 import Halogen.Canvas.Interact as Interact
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (style)
 import Halogen.HTML.Events as HE
 import Type.Prelude (Proxy(..))
+import Web.TouchEvent.TouchEvent (touches)
+import Web.TouchEvent.TouchList (item)
+import Web.TouchEvent.Touch as Touch
 import Web.UIEvent.MouseEvent (clientY, clientX)
 
 type Slots m = ( sketch :: H.Slot (CanvasT m) Interact.Output Unit ) 
@@ -73,6 +76,7 @@ renderLines { lines, selected } = HH.div_ $ renderLine <$> (zip (0 .. (length li
             border solid (px 1.0) black
             when (Just idx == selected) $ backgroundColor (rgb 180 180 180) 
         , HE.onMouseOver (const $ Select idx)
+        , HE.onTouchStart (const $ Select idx)
 
         ]
         [ HH.button [ HE.onClick (const $ Delete idx) ] [ HH.text "delete" ]
@@ -146,5 +150,29 @@ interact =
               update (f /\ _) = (f /\ p)
           H.modify $ \w -> w { line = update <$> w.line }
         _ -> H.get 
-
+    TouchEvent i r ->
+      case i of
+        TouchStart t -> do
+          case item 0 $ touches t of
+            Nothing -> H.get
+            Just e -> do
+              let p = { x: toNumber (Touch.clientX e) - r.left, y: toNumber (Touch.clientY e) - r.top }
+              H.modify $ \w -> w { line = maybe (Just (p /\ p)) Just w.line }
+        TouchMove t -> do
+          case item 0 $ touches t of
+            Nothing -> H.get
+            Just e -> do
+              let p = { x: toNumber (Touch.clientX e) - r.left, y: toNumber (Touch.clientY e) - r.top }
+                  update (f /\ _) = (f /\ p)
+              H.modify $ \w -> w { line = update <$> w.line }
+        TouchEnd _ -> do 
+          H.modify $ \w ->
+               w { line = Nothing
+                 , lines =
+                     case w.line of
+                       Nothing -> w.lines
+                       Just so -> so:w.lines
+                 }
+        TouchLeave _ -> H.modify (\w -> w { line = Nothing })
+        _ -> H.get
 

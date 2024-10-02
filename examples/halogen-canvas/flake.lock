@@ -159,11 +159,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1706957990,
-        "narHash": "sha256-khf12ZYRIMDnipTtfvLxt8hXJ7CdUVzSAMlTy5PKvE4=",
+        "lastModified": 1706993102,
+        "narHash": "sha256-/CRpKisXvP6oYQgKX75HkK7Ykr/++Ors5AaKH3y4Duk=",
         "owner": "grybiena",
         "repo": "halogen-canvas",
-        "rev": "1de25ff6f91cd9dbef10a0f4d1dc446b33db402d",
+        "rev": "b99828fc7302bc3a93378feb67bd015c1653b38c",
         "type": "github"
       },
       "original": {
