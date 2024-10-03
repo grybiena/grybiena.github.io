@@ -18,6 +18,10 @@ async def index_js_handler(_):
 async def posts_handler(_):
     return web.Response(text=io.open("./posts.json").read(), content_type="application/json")
 
+async def links_handler(_):
+    return web.Response(text=io.open("./links.json").read(), content_type="application/json")
+
+
 async def post_handler(request):
     return web.Response(text=io.open("./posts/{}".format(request.match_info['name'])).read(), content_type="text/utf-8")
 
@@ -57,6 +61,7 @@ def create_runner():
         web.get('/',   index_handler),
         web.get('/index.js', index_js_handler),
         web.get('/posts.json', posts_handler),
+        web.get('/links.json', links_handler),
         web.get('/posts/{name}', post_handler),
         web.get('/ws', websocket_handler),
     ])
