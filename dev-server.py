@@ -21,6 +21,12 @@ async def posts_handler(_):
 async def links_handler(_):
     return web.Response(text=io.open("./links.json").read(), content_type="application/json")
 
+async def example_html(request):
+    return web.Response(text=io.open("./examples/{}/index.html".format(request.match_info['name'])).read(), content_type="text/html")
+
+async def example_js_handler(request):
+    return web.Response(text=io.open("./examples/{}/index.js".format(request.match_info['name']),"r").read(),content_type="text/javascript")
+
 
 async def post_handler(request):
     return web.Response(text=io.open("./posts/{}".format(request.match_info['name'])).read(), content_type="text/utf-8")
@@ -63,6 +69,8 @@ def create_runner():
         web.get('/posts.json', posts_handler),
         web.get('/links.json', links_handler),
         web.get('/posts/{name}', post_handler),
+        web.get('/examples/{name}/index.html',example_html),
+        web.get('/examples/{name}/index.js',example_js_handler),
         web.get('/ws', websocket_handler),
     ])
     return web.AppRunner(app)

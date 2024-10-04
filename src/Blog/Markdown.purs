@@ -5,6 +5,7 @@ import Prelude
 import CSS (maxWidth, pct, select)
 import CSS.Selector (byClass, element, star, with, (|*))
 import Data.Maybe (Maybe(..))
+import Data.Options ((:=))
 import Data.Traversable (traverse_)
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
@@ -13,7 +14,8 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.CSS (stylesheet)
 import Halogen.HTML.Properties as HP
-import MarkdownIt (renderString)
+import MarkdownIt (Preset(..), html, newMarkdownIt)
+import MarkdownIt as MarkdownIt
 import Web.HTML (HTMLElement)
 
 
@@ -36,7 +38,8 @@ component = do
 handleAction :: forall o m. MonadAff m => Action -> H.HalogenM String Action () o m Unit
 handleAction Initialize = do
   s <- H.get
-  md <- H.liftEffect $ renderString s 
+  mdi <- H.liftEffect $ newMarkdownIt Default (html := true)
+  md <- H.liftEffect $ MarkdownIt.render mdi s 
   ht <- H.getHTMLElementRef (H.RefLabel "markdown")
   flip traverse_ ht $ \el -> do
      H.liftEffect $ innerHTML el md
