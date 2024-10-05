@@ -6,6 +6,10 @@
  , "date": "2024-09-30"
  , "post": "2024-09-30-Purescript-FFI-Introduction.md"
  },
+ { "title": "Halogen Infinite Scroll"
+ , "date": "2024-03-03"
+ , "post": "2024-03-03-Halogen-Infinite-Scroll.md"
+ },
  { "title": "Halogen XTerm"
  , "date": "2024-02-03"
  , "post": "2024-02-03-Halogen-XTerm.md"
