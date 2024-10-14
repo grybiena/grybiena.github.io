@@ -1,4 +1,7 @@
-[{ "title": "Purescript Web Dev Template"
+[{ "title": "Web Audio"
+ , "date": "2024-10-11"
+ , "post": "2024-10-11-Web-Audio.md"
+ },{ "title": "Purescript Web Dev Template"
  , "date": "2024-10-01"
  , "post": "2024-10-01-Purescript-Web-Dev-Template.md"
  },

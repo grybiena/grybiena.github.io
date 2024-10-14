@@ -27,9 +27,18 @@ async def example_html(request):
 async def example_js_handler(request):
     return web.Response(text=io.open("./examples/{}/index.js".format(request.match_info['name']),"r").read(),content_type="text/javascript")
 
-
 async def post_handler(request):
     return web.Response(text=io.open("./posts/{}".format(request.match_info['name'])).read(), content_type="text/utf-8")
+
+async def audio_handler(request):
+    return web.FileResponse(path="./audio/{}".format(request.match_info['name']), status=200)
+#    response = web.StreamResponse()
+#    await response.prepare(request)
+#    await response.write(io.open("./audio/{}".format(request.match_info['name']),'rb').read())
+#    await response.write_eof()
+#    return response
+
+#    return web.Response(text=io.open("./audio/{}".format(request.match_info['name'])).read(), content_type="audio/mpeg")
 
 CLIENTS = set()
 
@@ -71,6 +80,7 @@ def create_runner():
         web.get('/posts/{name}', post_handler),
         web.get('/examples/{name}/index.html',example_html),
         web.get('/examples/{name}/index.js',example_js_handler),
+        web.get('/audio/{name}',audio_handler),
         web.get('/ws', websocket_handler),
     ])
     return web.AppRunner(app)
