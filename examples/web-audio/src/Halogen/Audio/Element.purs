@@ -40,7 +40,6 @@ data Query a =
 type Input =
   { controls :: Boolean 
   , source :: String 
---  , audioContext :: AudioContext
   }
 
 type State =
@@ -75,15 +74,9 @@ component =
       case _ of
         Initialize -> do
           e <- H.getRef (H.RefLabel "audio")
-          case e >>= fromElement of
-            Nothing -> pure unit -- TODO error log "no audio element"
-            Just el -> do
-               traverse_ (subscribeToEvent el) audioElementEvents 
-               H.raise $ AudioElement el
---               context <- H.gets (\s -> s.config.audioContext) 
---               source <- H.liftEffect $ newMediaElementSource context (mediaElement := toHTMLMediaElement el) 
---               H.modify_ (\st -> st { sourceNode = Just source })
---               H.raise $ Source source
+          flip traverse_ (e >>= fromElement) $ \el -> do
+            traverse_ (subscribeToEvent el) audioElementEvents 
+            H.raise $ AudioElement el
         Finalize -> do
            s <- H.gets (\st -> st.sourceNode)
            flip traverse_ s $ \n -> do

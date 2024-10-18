@@ -25,6 +25,7 @@ to generate this file without the comments in this block.
   , "halogen-subscriptions"
   , "integers"
   , "maybe"
+  , "nonempty"
   , "options"
   , "prelude"
   , "strings"
