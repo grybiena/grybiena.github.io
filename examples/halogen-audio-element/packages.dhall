@@ -101,7 +101,28 @@ in  upstream
 let upstream =
       https://github.com/purescript/package-sets/releases/download/psc-0.15.15-20241008/packages.dhall
         sha256:a168f3f3771d75e09e4a1829e7e05b34e4fa9e4724160e8d07db014d1df33880
-in let overrides = { web-audio = ./../../../web-audio/spago.dhall as Location }
+in  upstream 
+  with halogen-audio-element =
+    { dependencies =
+       [ "css"
+       , "effect"
+       , "enums"
+       , "foldable-traversable"
+       , "halogen"
+       , "halogen-css"
+       , "halogen-subscriptions"
+       , "maybe"
+       , "prelude"
+       , "strings"
+       , "tuples"
+       , "unfoldable"
+       , "web-events"
+       , "web-html"
+       ]
+    , repo =
+       "https://github.com/grybiena/halogen-audio-element"
+    , version =
+        "182a0f438848f89e28c8f08432ea3dc7420b22f4"
+    }
 
-in  upstream // overrides
 

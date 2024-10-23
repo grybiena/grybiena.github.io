@@ -1,5 +1,5 @@
 {
-  description = "web audio example";
+  description = "web audio element example";
 
   inputs = {
     easy-purescript-nix = {
