@@ -27,7 +27,7 @@ audioElementEvents :: forall e . Enum e => Bounded e => Array e
 audioElementEvents = unfoldr (\a -> Tuple a <$> succ a) bottom 
 ```
 
-The below example demonstrates the component by logging audio events underneath and updating some playback information in an event driven manner. The API of the audio element has sufficient features to allow disabling of the default controls and implementation of a custom audio playback interface (more on that later).
+The below [example](https://github.com/grybiena/grybiena.github.io/tree/grybiena/examples/halogen-audio-element) demonstrates the component by logging audio events underneath and updating some playback information in an event driven manner. The API of the audio element has sufficient features to allow disabling of the default controls and implementation of a custom audio playback interface (more on that later).
 
 
 <iframe width=750px height=500px src="/examples/halogen-audio-element/index.html">
