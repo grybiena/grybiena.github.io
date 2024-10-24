@@ -122,7 +122,7 @@ in  upstream
     , repo =
        "https://github.com/grybiena/halogen-audio-element"
     , version =
-        "182a0f438848f89e28c8f08432ea3dc7420b22f4"
+        "f54c7c6954e7a1a8dece583e3fd33af6d1df104b"
     }
 
 

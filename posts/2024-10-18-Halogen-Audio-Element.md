@@ -7,10 +7,17 @@ There is a neat trick for binding to all of the event types on initialization.
   Initialize -> do
     e <- H.getRef (H.RefLabel "audio")
     flip traverse_ (e >>= fromElement) $ \el -> do
-      traverse_ (subscribeToEvent el) audioElementEvents 
+      traverse_ (subscribeToEvent el) (everything :: Array AudioElementEvent) 
       H.raise $ AudioElement el
 ```
-The event types are [encoded as a data type](https://github.com/grybiena/halogen-audio-element/blob/182a0f438848f89e28c8f08432ea3dc7420b22f4/src/Halogen/Audio/Element/Event.purs#L16) which is a _Bounded_ _Enum_ so can be enumerated fully. The lower case string reresentation of each constructor is the name of the event type. This means we can traverse over all the event types to bind event listeners for each event.
+The event types are [encoded as a data type](https://github.com/grybiena/halogen-audio-element/blob/f54c7c6954e7a1a8dece583e3fd33af6d1df104b/src/Halogen/Audio/Element/Event.purs#L16) which is a _Bounded_ _Enum_ so can be enumerated fully into anything _Unfoldable_.
+
+```haskell
+everything :: forall t a. Enum a => Bounded a => Unfoldable t => t a 
+everything = (unfoldr1 (\a -> Tuple a (succ a)) bottom) 
+```
+
+The lower case string reresentation of each constructor is the name of the event type. This means we can traverse over all the event types to bind event listeners for each event.
 
 ```haskell
 subscribeToEvent :: forall o s.
@@ -21,10 +28,6 @@ subscribeToEvent el t = do
   callback <- H.liftEffect $ eventListener (const $ HS.notify listener t)
   H.liftEffect $ addEventListener (EventType $ toLower $ show t) callback false (toEventTarget el)
   void $ H.subscribe (Bubble <$> emitter)
-
--- this is generic despite the specific name
-audioElementEvents :: forall e . Enum e => Bounded e => Array e
-audioElementEvents = unfoldr (\a -> Tuple a <$> succ a) bottom 
 ```
 
 The below [example](https://github.com/grybiena/grybiena.github.io/tree/grybiena/examples/halogen-audio-element) demonstrates the component by logging audio events underneath and updating some playback information in an event driven manner. The API of the audio element has sufficient features to allow disabling of the default controls and implementation of a custom audio playback interface (more on that later).
